@@ -1,77 +1,101 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, TrendingDown, Wallet, PiggyBank, Target, 
-  AlertTriangle, CheckCircle, Clock, Zap
+  AlertTriangle, Zap
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
-import { GlassCard, Badge, ProgressBar, GlowText } from '../ui/GlassCard';
+import { GlassCard, Badge, ProgressBar } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
-import { formatCurrency, formatPercentage, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
+import { formatCurrency, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
 import { categoryColors, categoryIcons } from '../../data/mockData';
 import { SafeChart } from '../ui/SafeChart';
 
 export function Dashboard() {
-  const { transactions, budgets, portfolio, goals, subscriptions, cryptoPrices } = useFinansStore();
+  // Granüler selector: Her state değişikliğinde tüm component re-render olmaz
+  const transactions = useFinansStore((s) => s.transactions);
+  const budgets = useFinansStore((s) => s.budgets);
+  const portfolio = useFinansStore((s) => s.portfolio);
+  const goals = useFinansStore((s) => s.goals);
 
-  const currentMonth = getCurrentMonth();
-  const monthTransactions = transactions.filter(t => t.date.startsWith(currentMonth));
-  
-  const totalIncome = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const totalExpense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-  const balance = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
+  // Tüm ağır hesaplamalar useMemo ile cache'lenir
+  // Sadece dependency'ler değiştiğinde yeniden hesaplanır
+  const computed = useMemo(() => {
+    const currentMonth = getCurrentMonth();
+    const monthTransactions = transactions.filter(t => t.date.startsWith(currentMonth));
+    
+    const totalIncome = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const totalExpense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const balance = totalIncome - totalExpense;
+    const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
 
-  // Portfolio value
-  const portfolioValue = portfolio.reduce((sum, item) => sum + (item.currentPrice * item.quantity), 0);
-  const portfolioProfit = portfolio.reduce((sum, item) => {
-    const cost = item.averageCost * item.quantity;
-    const current = item.currentPrice * item.quantity;
-    return sum + (current - cost);
-  }, 0);
+    const portfolioValue = portfolio.reduce((sum, item) => sum + (item.currentPrice * item.quantity), 0);
+    const portfolioProfit = portfolio.reduce((sum, item) => {
+      const cost = item.averageCost * item.quantity;
+      const current = item.currentPrice * item.quantity;
+      return sum + (current - cost);
+    }, 0);
 
-  // Financial IQ
-  const budgetAdherence = budgets.length > 0 
-    ? budgets.reduce((sum, b) => sum + Math.min(100, (b.spent / b.limit) * 100), 0) / budgets.length 
-    : 100;
-  const financialIQ = calculateFinancialIQ(budgetAdherence, savingsRate, 70, 60);
+    const budgetAdherence = budgets.length > 0 
+      ? budgets.reduce((sum, b) => sum + Math.min(100, (b.spent / b.limit) * 100), 0) / budgets.length 
+      : 100;
+    const financialIQ = calculateFinancialIQ(budgetAdherence, savingsRate, 70, 60);
 
-  // Rebalance check
-  const rebalanceAlert = checkRebalanceNeeded(portfolio);
+    const rebalanceAlert = checkRebalanceNeeded(portfolio);
 
-  // Expense by category
-  const expenseByCategory = monthTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>);
+    const expenseByCategory = monthTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((acc, t) => {
+        acc[t.category] = (acc[t.category] || 0) + t.amount;
+        return acc;
+      }, {} as Record<string, number>);
 
-  const pieData = Object.entries(expenseByCategory).map(([category, amount]) => ({
-    name: category,
-    value: amount,
-    color: categoryColors[category] || '#6B7280',
-  }));
+    const pieData = Object.entries(expenseByCategory).map(([category, amount]) => ({
+      name: category,
+      value: amount,
+      color: categoryColors[category] || '#6B7280',
+    }));
 
-  // Cash flow for last 7 days
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    return date.toISOString().split('T')[0];
-  });
+    // Cash flow for last 7 days
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return date.toISOString().split('T')[0];
+    });
 
-  const cashFlowData = last7Days.map(date => {
-    const dayTransactions = transactions.filter(t => t.date === date);
-    const income = dayTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-    const expense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-    return { date: date.slice(5), income, expense, net: income - expense };
-  });
+    // Transaction lookup map for O(1) access instead of O(n) filter
+    const txByDate = new Map<string, typeof transactions>();
+    for (const t of transactions) {
+      const existing = txByDate.get(t.date) || [];
+      existing.push(t);
+      txByDate.set(t.date, existing);
+    }
 
-  // Goals progress
-  const goalsProgress = goals.map(g => ({
-    ...g,
-    percent: (g.currentAmount / g.targetAmount) * 100,
-  })).slice(0, 3);
+    const cashFlowData = last7Days.map(date => {
+      const dayTx = txByDate.get(date) || [];
+      const income = dayTx.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const expense = dayTx.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      return { date: date.slice(5), income, expense, net: income - expense };
+    });
+
+    const goalsProgress = goals.map(g => ({
+      ...g,
+      percent: g.targetAmount > 0 ? (g.currentAmount / g.targetAmount) * 100 : 0,
+    })).slice(0, 3);
+
+    return {
+      totalIncome, totalExpense, balance, savingsRate,
+      portfolioValue, portfolioProfit, financialIQ, budgetAdherence,
+      rebalanceAlert, pieData, cashFlowData, goalsProgress,
+    };
+  }, [transactions, budgets, portfolio, goals]);
+
+  const {
+    totalIncome, totalExpense, balance, savingsRate,
+    portfolioValue, portfolioProfit, financialIQ, budgetAdherence,
+    rebalanceAlert, pieData, cashFlowData, goalsProgress,
+  } = computed;
 
   const statCards = [
     {
@@ -81,6 +105,7 @@ export function Dashboard() {
       changeType: portfolioProfit >= 0 ? 'positive' : 'negative',
       icon: Wallet,
       gradient: 'from-cyan-500/20 to-blue-500/20',
+      bgGradient: 'rgba(6,182,212,0.1)',
     },
     {
       title: 'Aylık Gelir',
@@ -89,6 +114,7 @@ export function Dashboard() {
       changeType: 'positive',
       icon: TrendingUp,
       gradient: 'from-emerald-500/20 to-green-500/20',
+      bgGradient: 'rgba(16,185,129,0.1)',
     },
     {
       title: 'Aylık Gider',
@@ -97,6 +123,7 @@ export function Dashboard() {
       changeType: 'negative',
       icon: TrendingDown,
       gradient: 'from-rose-500/20 to-red-500/20',
+      bgGradient: 'rgba(244,63,94,0.1)',
     },
     {
       title: 'Tasarruf Oranı',
@@ -105,6 +132,7 @@ export function Dashboard() {
       changeType: savingsRate >= 20 ? 'positive' : 'warning',
       icon: PiggyBank,
       gradient: 'from-purple-500/20 to-pink-500/20',
+      bgGradient: 'rgba(168,85,247,0.1)',
     },
   ];
 
@@ -124,7 +152,7 @@ export function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <GlassCard className="p-6" gradient={`linear-gradient(135deg, ${stat.gradient.includes('cyan') ? 'rgba(6,182,212,0.1)' : stat.gradient.includes('emerald') ? 'rgba(16,185,129,0.1)' : stat.gradient.includes('rose') ? 'rgba(244,63,94,0.1)' : 'rgba(168,85,247,0.1)'}, transparent)`}>
+            <GlassCard className="p-6" gradient={`linear-gradient(135deg, ${stat.bgGradient}, transparent)`}>
               <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
                   <stat.icon className="w-6 h-6 text-white" />

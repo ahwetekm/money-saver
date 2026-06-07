@@ -1,13 +1,16 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Layout } from './components/layout/MobileLayout';
-import { Dashboard } from './components/pages/Dashboard';
-import { Transactions } from './components/pages/Transactions';
-import { Portfolio } from './components/pages/Portfolio';
-import { Analytics } from './components/pages/Analytics';
-import { Goals } from './components/pages/Goals';
-import { Subscriptions } from './components/pages/Subscriptions';
-import { Settings } from './components/pages/Settings';
 import { useFinansStore } from './store/useFinansStore';
+
+// Code splitting: Her sayfa ayrı chunk olarak yüklenir
+// Bu, ilk yükleme süresini dramatik şekilde azaltır
+const Dashboard = lazy(() => import('./components/pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Transactions = lazy(() => import('./components/pages/Transactions').then(m => ({ default: m.Transactions })));
+const Portfolio = lazy(() => import('./components/pages/Portfolio').then(m => ({ default: m.Portfolio })));
+const Analytics = lazy(() => import('./components/pages/Analytics').then(m => ({ default: m.Analytics })));
+const Goals = lazy(() => import('./components/pages/Goals').then(m => ({ default: m.Goals })));
+const Subscriptions = lazy(() => import('./components/pages/Subscriptions').then(m => ({ default: m.Subscriptions })));
+const Settings = lazy(() => import('./components/pages/Settings').then(m => ({ default: m.Settings })));
 
 // Loading screen component
 function LoadingScreen() {
@@ -82,14 +85,14 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isReady, setIsReady] = useState(false);
-  const { initialize, initialized, isLoading } = useFinansStore();
+  const initialize = useFinansStore((s) => s.initialize);
+  const initialized = useFinansStore((s) => s.initialized);
+  const isLoading = useFinansStore((s) => s.isLoading);
 
   useEffect(() => {
-    // Initialize app data
     const init = async () => {
       try {
         await initialize();
-        // Small delay to ensure styles are loaded
         requestAnimationFrame(() => {
           setIsReady(true);
         });
