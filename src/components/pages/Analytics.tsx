@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { Calculator, TrendingUp, Target, AlertTriangle, BarChart3, PieChart as PieChartIcon, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { GlassCard, GlassInput, Badge, ProgressBar } from '../ui/GlassCard';
-import { PageHeader } from '../layout/Layout';
+import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { formatCurrency, formatPercentage, calculateCompoundInterest, calculateFIRE, calculateMoodSpendingImpact } from '../../lib/utils';
 import { moodEmojis, moodColors } from '../../data/mockData';

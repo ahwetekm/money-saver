@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Plus, Trash2, Target, Calendar, Link, X } from 'lucide-react';
 import { GlassCard, NeonButton, GlassInput, ProgressBar, Badge, EmptyState } from '../ui/GlassCard';
-import { PageHeader } from '../layout/Layout';
+import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { Goal } from '../../types';
 import { formatCurrency, formatDate } from '../../lib/utils';

@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Plus, Trash2, Edit2, X, Search, Filter, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Trash2, X, Search, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
 import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge, EmptyState } from '../ui/GlassCard';
-import { PageHeader } from '../layout/Layout';
+import { PageHeader, SwipeableRow } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { Transaction } from '../../types';
 import { formatCurrency, formatDate, getCurrentDate, getCurrentMonth } from '../../lib/utils';
-import { incomeCategories, expenseCategories, categoryIcons, categoryColors, moodEmojis, moodColors } from '../../data/mockData';
+import { incomeCategories, expenseCategories, categoryIcons, categoryColors, moodEmojis } from '../../data/mockData';
 
 export function Transactions() {
   const { transactions, addTransaction, deleteTransaction } = useFinansStore();
@@ -73,20 +73,14 @@ export function Transactions() {
       {/* Transaction List */}
       {filteredTransactions.length > 0 ? (
         <div className="space-y-3">
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {filteredTransactions.map((transaction, index) => (
-              <motion.div
+              <SwipeableRow
                 key={transaction.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.05 }}
+                onDelete={() => deleteTransaction(transaction.id)}
               >
-                <TransactionCard 
-                  transaction={transaction} 
-                  onDelete={() => deleteTransaction(transaction.id)}
-                />
-              </motion.div>
+                <TransactionCard transaction={transaction} />
+              </SwipeableRow>
             ))}
           </AnimatePresence>
         </div>
@@ -94,13 +88,7 @@ export function Transactions() {
         <EmptyState
           icon={Calendar}
           title="İşlem bulunamadı"
-          description="Bu kriterlere uygun işlem yok. Yeni işlem eklemek için butona tıklayın."
-          action={
-            <NeonButton onClick={() => setIsModalOpen(true)}>
-              <Plus className="w-5 h-5 mr-2 inline" />
-              İşlem Ekle
-            </NeonButton>
-          }
+          description="Bu kriterlere uygun işlem yok. Yeni işlem eklemek için + butonuna tıklayın."
         />
       )}
 
@@ -117,15 +105,15 @@ export function Transactions() {
   );
 }
 
-function TransactionCard({ transaction, onDelete }: { transaction: Transaction; onDelete: () => void }) {
+function TransactionCard({ transaction }: { transaction: Transaction }) {
   const isIncome = transaction.type === 'income';
   const categoryColor = categoryColors[transaction.category] || '#6B7280';
 
   return (
-    <GlassCard className="p-4" hover={false}>
+    <div className="p-4 bg-white/5 rounded-xl">
       <div className="flex items-center gap-4">
         <div 
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
           style={{ backgroundColor: `${categoryColor}20` }}
         >
           {categoryIcons[transaction.category] || '📌'}
@@ -137,7 +125,7 @@ function TransactionCard({ transaction, onDelete }: { transaction: Transaction; 
               <span title={`Mood: ${transaction.mood}`}>{moodEmojis[transaction.mood]}</span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge variant="default">{transaction.category}</Badge>
             <span className="text-xs text-white/40">{formatDate(transaction.date)}</span>
             {transaction.recurring && (
@@ -145,19 +133,20 @@ function TransactionCard({ transaction, onDelete }: { transaction: Transaction; 
             )}
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0">
           <p className={`text-lg font-bold ${isIncome ? 'text-emerald-400' : 'text-rose-400'}`}>
             {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
           </p>
         </div>
+        {/* Delete button - visible on desktop only */}
         <button
-          onClick={onDelete}
-          className="p-2 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+          className="hidden lg:block p-2 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
-    </GlassCard>
+    </div>
   );
 }
 
@@ -215,10 +204,10 @@ function TransactionModal({
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-md bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl"
+        className="w-full max-w-md bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-slate-900/95">
           <h3 className="text-xl font-semibold text-white">Yeni İşlem</h3>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
             <X className="w-5 h-5 text-white/60" />
@@ -299,7 +288,7 @@ function TransactionModal({
           {type === 'expense' && (
             <div>
               <label className="block text-sm text-white/60 mb-2">Hava Durumu (Opsiyonel)</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {Object.entries(moodEmojis).map(([key, emoji]) => (
                   <button
                     key={key}
@@ -329,7 +318,7 @@ function TransactionModal({
           </label>
         </div>
 
-        <div className="p-6 border-t border-white/10 flex gap-3">
+        <div className="p-6 border-t border-white/10 flex gap-3 sticky bottom-0 bg-slate-900/95">
           <button
             onClick={onClose}
             className="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white/60 hover:bg-white/10 transition-colors"

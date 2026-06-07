@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, Bitcoin, Building2, Coins, DollarSign } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge, EmptyState } from '../ui/GlassCard';
-import { PageHeader } from '../layout/Layout';
+import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { PortfolioItem, CryptoPrice } from '../../types';
 import { formatCurrency, formatPercentage, formatNumber } from '../../lib/utils';

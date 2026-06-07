@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { GlassCard, Badge, ProgressBar, GlowText } from '../ui/GlassCard';
-import { PageHeader } from '../layout/Layout';
+import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { formatCurrency, formatPercentage, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
 import { categoryColors, categoryIcons } from '../../data/mockData';

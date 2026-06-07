@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout } from './components/layout/Layout';
+import { Layout, PageHeader } from './components/layout/MobileLayout';
 import { Dashboard } from './components/pages/Dashboard';
 import { Transactions } from './components/pages/Transactions';
 import { Portfolio } from './components/pages/Portfolio';

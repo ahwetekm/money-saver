@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Plus, Trash2, Calendar, Clock, Bell, X, AlertTriangle } from 'lucide-react';
 import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge, EmptyState } from '../ui/GlassCard';
-import { PageHeader } from '../layout/Layout';
+import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { Subscription } from '../../types';
 import { formatCurrency, formatDate } from '../../lib/utils';
