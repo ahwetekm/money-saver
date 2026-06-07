@@ -38,7 +38,22 @@ export function SafeChart({
   const { isReady, ref } = useChartReady();
 
   return (
-    <div ref={ref} style={{ width: '100%', height }} className={`relative ${className}`}>
+    <div 
+      ref={ref} 
+      style={{ 
+        width: '100%', 
+        height,
+        /* 120Hz: Chart container'ı izole render scope
+           - contain: layout style paint → chart reflow'u parent'ı etkilemez
+           - content-visibility: auto → off-screen chart'lar render'ı atlar
+           - contain-intrinsic-size → layout shift önleme
+        */
+        contain: 'layout style paint',
+        contentVisibility: 'auto',
+        containIntrinsicSize: `auto ${height}px`,
+      }} 
+      className={`relative ${className}`}
+    >
       {isReady ? (
         <ChartErrorBoundary>
           {children}
