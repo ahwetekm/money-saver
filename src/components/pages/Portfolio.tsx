@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, Bitcoin, Building2, Coins, DollarSign } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { SafeChart } from '../ui/SafeChart';
 import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge, EmptyState } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
@@ -147,7 +148,7 @@ export function Portfolio() {
             <h3 className="text-lg font-semibold text-white mb-6">Varlık Dağılımı</h3>
             {pieData.length > 0 ? (
               <>
-                <div className="h-64">
+                <SafeChart height={256}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -173,7 +174,7 @@ export function Portfolio() {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                </div>
+                </SafeChart>
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   {pieData.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">

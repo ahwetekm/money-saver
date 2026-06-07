@@ -9,28 +9,7 @@ import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { formatCurrency, formatPercentage, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
 import { categoryColors, categoryIcons } from '../../data/mockData';
-import { useChartReady } from '../../lib/hooks';
-
-// Safe chart wrapper component
-function SafeChart({ 
-  children, 
-  height = 200 
-}: { 
-  children: React.ReactNode; 
-  height?: number;
-}) {
-  const { isReady, ref } = useChartReady();
-
-  return (
-    <div ref={ref} style={{ width: '100%', height }} className="relative">
-      {isReady ? children : (
-        <div className="w-full h-full flex items-center justify-center text-white/30">
-          <div className="w-8 h-8 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
-        </div>
-      )}
-    </div>
-  );
-}
+import { SafeChart } from '../ui/SafeChart';
 
 export function Dashboard() {
   const { transactions, budgets, portfolio, goals, subscriptions, cryptoPrices } = useFinansStore();

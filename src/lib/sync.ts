@@ -13,9 +13,9 @@ interface SyncConfig {
 
 // More reliable Gun.js relay servers
 const GUN_RELAYS = [
-  'https://gun-us.herokuapp.com/gun',
-  'https://gun-eu.herokuapp.com/gun',
-  // Add more relays as backup
+  'https://peer.wallie.io/gun',
+  'https://gun-server-76i7.onrender.com/gun',
+  'https://relay.peer.ooo/gun',
 ];
 
 class SyncService {

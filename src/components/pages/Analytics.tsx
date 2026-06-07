@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { Calculator, TrendingUp, Target, AlertTriangle, BarChart3, PieChart as PieChartIcon, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { SafeChart } from '../ui/SafeChart';
 import { GlassCard, GlassInput, Badge, ProgressBar } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
@@ -131,7 +132,7 @@ export function Analytics() {
           </div>
         </div>
 
-        <div className="h-64">
+        <SafeChart height={256}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={projectionData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -162,7 +163,7 @@ export function Analytics() {
               />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </SafeChart>
 
         <div className="grid grid-cols-3 gap-4 mt-6">
           <div className="text-center p-4 rounded-xl bg-white/5">
@@ -264,7 +265,7 @@ export function Analytics() {
           </div>
 
           {moodAnalysis.length > 0 ? (
-            <div className="h-48">
+            <SafeChart height={192}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={moodAnalysis} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -286,7 +287,7 @@ export function Analytics() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </SafeChart>
           ) : (
             <div className="h-48 flex items-center justify-center text-white/40">
               Henüz mood verisi yok
@@ -321,7 +322,7 @@ export function Analytics() {
           </div>
 
           {monthlyData.length > 0 ? (
-            <div className="h-64">
+            <SafeChart height={256}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -339,7 +340,7 @@ export function Analytics() {
                   <Bar dataKey="gider" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </SafeChart>
           ) : (
             <div className="h-64 flex items-center justify-center text-white/40">
               Henüz veri yok
@@ -360,7 +361,7 @@ export function Analytics() {
           </div>
 
           {categoryBreakdown.length > 0 ? (
-            <div className="h-48">
+            <SafeChart height={192}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -386,7 +387,7 @@ export function Analytics() {
                   />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
+            </SafeChart>
           ) : (
             <div className="h-48 flex items-center justify-center text-white/40">
               Henüz harcama yok
