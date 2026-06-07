@@ -10,7 +10,7 @@ import { useFinansStore } from '../../store/useFinansStore';
 import { Transaction, PortfolioItem } from '../../types';
 import { getCurrentDate, getCurrentMonth } from '../../lib/utils';
 import { incomeCategories, expenseCategories, categoryIcons, moodEmojis } from '../../data/mockData';
-import { useSyncStatus } from '../../lib/sync';
+
 
 interface LayoutProps {
   children: ReactNode;
@@ -31,7 +31,6 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [fabType, setFabType] = useState<'income' | 'expense' | 'investment' | null>(null);
-  const syncStatus = useSyncStatus();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -50,9 +49,6 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
           <div className="absolute top-0 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
         </div>
-
-        {/* Sync Status Indicator */}
-        <SyncStatusIndicator status={syncStatus} />
 
         {/* Main Content */}
         <main className="relative z-10 p-4">
@@ -182,9 +178,6 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         />
       </div>
 
-      {/* Sync Status Indicator */}
-      <SyncStatusIndicator status={syncStatus} />
-
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -280 }}
@@ -240,30 +233,6 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
           </motion.div>
         </div>
       </main>
-    </div>
-  );
-}
-
-// Sync Status Indicator Component
-function SyncStatusIndicator({ status }: { status: string }) {
-  const statusConfig = {
-    connected: { icon: CheckCircle, color: 'text-emerald-400', label: 'P2P' },
-    syncing: { icon: RefreshCw, color: 'text-cyan-400', label: 'Sync' },
-    connecting: { icon: RefreshCw, color: 'text-amber-400', label: '...' },
-    offline: { icon: WifiOff, color: 'text-white/40', label: 'Offline' },
-    error: { icon: AlertTriangle, color: 'text-red-400', label: 'Hata' },
-  };
-
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.offline;
-  const Icon = config.icon;
-  const isAnimating = status === 'syncing' || status === 'connecting';
-
-  return (
-    <div className="fixed top-4 right-4 z-50">
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 backdrop-blur-xl border border-white/10 ${config.color}`}>
-        <Icon className={`w-4 h-4 ${isAnimating ? 'animate-spin' : ''}`} />
-        <span className="text-xs font-medium hidden sm:inline">{config.label}</span>
-      </div>
     </div>
   );
 }
