@@ -158,7 +158,7 @@ function SubscriptionCard({ subscription, onDelete }: { subscription: Subscripti
       <div className="flex-1 min-w-0">
         <h4 className="font-medium text-white">{subscription.name}</h4>
         <div className="flex items-center gap-2 mt-1">
-          <Badge variant="default">{subscription.category}</Badge>
+          <Badge variant="info">{subscription.category}</Badge>
           <span className="text-xs text-white/40">
             {subscription.interval === 'monthly' ? 'Aylık' : 'Yıllık'}
           </span>

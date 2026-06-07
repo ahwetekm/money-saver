@@ -1,14 +1,13 @@
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from 'framer-motion';
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState } from 'react';
 import { 
-  LayoutDashboard, Wallet, TrendingUp, Target, Calendar, 
-  Settings, Plus, X, TrendingDown, Bitcoin, Building2,
-  CheckCircle, AlertTriangle, WifiOff, RefreshCw
+  LayoutDashboard, Wallet, TrendingUp, Target, 
+  Settings, Plus, X, TrendingDown, Bitcoin
 } from 'lucide-react';
-import { GlassCard, NeonButton, GlassInput, GlassSelect } from '../ui/GlassCard';
+import { GlassCard, NeonButton, GlassInput } from '../ui/GlassCard';
 import { useFinansStore } from '../../store/useFinansStore';
-import { Transaction, PortfolioItem } from '../../types';
-import { getCurrentDate, getCurrentMonth } from '../../lib/utils';
+import { getCurrentDate } from '../../lib/utils';
+import { useIsMobile } from '../../lib/hooks';
 import { incomeCategories, expenseCategories, categoryIcons, moodEmojis } from '../../data/mockData';
 
 
@@ -27,17 +26,11 @@ const mobileNavItems = [
 ];
 
 export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFabOpen, setIsFabOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [fabType, setFabType] = useState<'income' | 'expense' | 'investment' | null>(null);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // useIsMobile hook: ResizeObserver ile daha verimli, gereksiz re-render yok
+  const isMobile = useIsMobile(1024);
 
   // Mobile Layout
   if (isMobile) {
@@ -161,7 +154,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
 
   // Desktop Layout
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-white">
       {/* Animated background */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />

@@ -1,27 +1,29 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, Bitcoin, Building2, Coins, DollarSign } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Plus, Trash2, TrendingUp, RefreshCw, Bitcoin, Building2, Coins, DollarSign } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { SafeChart } from '../ui/SafeChart';
-import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge, EmptyState } from '../ui/GlassCard';
+import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { PortfolioItem, CryptoPrice } from '../../types';
 import { formatCurrency, formatPercentage, formatNumber } from '../../lib/utils';
-import { mockBISTStocks, mockFunds, mockExchangeRates, mockGoldPrices } from '../../data/mockData';
+import { mockBISTStocks, mockFunds, mockGoldPrices } from '../../data/mockData';
 
 export function Portfolio() {
-  const { portfolio, addPortfolioItem, deletePortfolioItem, cryptoPrices, setCryptoPrices } = useFinansStore();
+  // Granüler selector'lar - sadece gerekli state değiştiğinde re-render
+  const portfolio = useFinansStore((s) => s.portfolio);
+  const addPortfolioItem = useFinansStore((s) => s.addPortfolioItem);
+  const deletePortfolioItem = useFinansStore((s) => s.deletePortfolioItem);
+  const cryptoPrices = useFinansStore((s) => s.cryptoPrices);
+  const setCryptoPrices = useFinansStore((s) => s.setCryptoPrices);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'crypto' | 'stocks' | 'funds' | 'gold'>('overview');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch crypto prices
-  useEffect(() => {
-    fetchCryptoPrices();
-  }, []);
-
-  const fetchCryptoPrices = async () => {
+  // useCallback: fetchCryptoPrices referansı sabit kalır, gereksiz re-render önlenir
+  const fetchCryptoPrices = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -31,7 +33,6 @@ export function Portfolio() {
       setCryptoPrices(data);
     } catch (error) {
       console.error('Failed to fetch crypto prices:', error);
-      // Use mock data if API fails
       setCryptoPrices([
         { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', current_price: 2500000, price_change_percentage_24h: 2.5, image: '' },
         { id: 'ethereum', symbol: 'eth', name: 'Ethereum', current_price: 125000, price_change_percentage_24h: -1.2, image: '' },
@@ -39,37 +40,43 @@ export function Portfolio() {
       ]);
     }
     setIsLoading(false);
-  };
+  }, [setCryptoPrices]);
 
-  // Update portfolio prices
   useEffect(() => {
-    portfolio.forEach(item => {
-      if (item.type === 'crypto') {
-        const crypto = cryptoPrices.find(c => c.id === item.symbol.toLowerCase());
-        if (crypto) {
-          // Update current price in store would happen here
-        }
-      }
-    });
-  }, [cryptoPrices, portfolio]);
+    fetchCryptoPrices();
+  }, [fetchCryptoPrices]);
 
-  const totalValue = portfolio.reduce((sum, item) => sum + (item.currentPrice * item.quantity), 0);
-  const totalCost = portfolio.reduce((sum, item) => sum + (item.averageCost * item.quantity), 0);
-  const totalProfit = totalValue - totalCost;
-  const profitPercent = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+  // useMemo: ağır hesaplamalar sadece portfolio değiştiğinde tekrar yapılır
+  const computed = useMemo(() => {
+    const totalValue = portfolio.reduce((sum, item) => sum + (item.currentPrice * item.quantity), 0);
+    const totalCost = portfolio.reduce((sum, item) => sum + (item.averageCost * item.quantity), 0);
+    const totalProfit = totalValue - totalCost;
+    const profitPercent = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
 
-  // Portfolio distribution
-  const portfolioByType = portfolio.reduce((acc, item) => {
-    const value = item.currentPrice * item.quantity;
-    acc[item.type] = (acc[item.type] || 0) + value;
-    return acc;
-  }, {} as Record<string, number>);
+    const portfolioByType = portfolio.reduce((acc, item) => {
+      const value = item.currentPrice * item.quantity;
+      acc[item.type] = (acc[item.type] || 0) + value;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const pieData = Object.entries(portfolioByType).map(([type, value]) => ({
-    name: type.charAt(0).toUpperCase() + type.slice(1),
-    value,
-    color: type === 'crypto' ? '#F59E0B' : type === 'stock' ? '#3B82F6' : type === 'fund' ? '#10B981' : type === 'gold' ? '#FCD34D' : '#8B5CF6',
-  }));
+    const typeColorMap: Record<string, string> = {
+      crypto: '#F59E0B',
+      stock: '#3B82F6',
+      fund: '#10B981',
+      gold: '#FCD34D',
+      currency: '#8B5CF6',
+    };
+
+    const pieData = Object.entries(portfolioByType).map(([type, value]) => ({
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      value,
+      color: typeColorMap[type] || '#6B7280',
+    }));
+
+    return { totalValue, totalCost, totalProfit, profitPercent, pieData };
+  }, [portfolio]);
+
+  const { totalValue, totalProfit, profitPercent, pieData } = computed;
 
   const tabs = [
     { id: 'overview', label: 'Genel Bakış', icon: TrendingUp },
@@ -127,7 +134,7 @@ export function Portfolio() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
               activeTab === tab.id
                 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
@@ -229,7 +236,6 @@ export function Portfolio() {
           addPortfolioItem(data);
           setIsModalOpen(false);
         }}
-        cryptoPrices={cryptoPrices}
       />
     </div>
   );
@@ -369,7 +375,7 @@ function FundsMarket() {
                 <span className="font-medium text-white">{fund.code}</span>
                 <span className="text-xs text-white/40">{fund.name}</span>
               </div>
-              <Badge variant="default" className="mt-1">{fund.category}</Badge>
+              <Badge variant="info" className="mt-1">{fund.category}</Badge>
             </div>
             <div className="text-right">
               <p className="font-medium text-white">{formatNumber(fund.price)}</p>
@@ -414,12 +420,10 @@ function AddAssetModal({
   isOpen, 
   onClose, 
   onSubmit,
-  cryptoPrices,
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   onSubmit: (data: Omit<PortfolioItem, 'id'>) => void;
-  cryptoPrices: CryptoPrice[];
 }) {
   const [type, setType] = useState<PortfolioItem['type']>('crypto');
   const [symbol, setSymbol] = useState('');
@@ -440,7 +444,6 @@ function AddAssetModal({
       transactions: [],
     });
 
-    // Reset
     setSymbol('');
     setName('');
     setQuantity('');

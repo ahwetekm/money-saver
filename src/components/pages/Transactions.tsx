@@ -126,7 +126,7 @@ function TransactionCard({ transaction }: { transaction: Transaction }) {
             )}
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Badge variant="default">{transaction.category}</Badge>
+            <Badge variant="info">{transaction.category}</Badge>
             <span className="text-xs text-white/40">{formatDate(transaction.date)}</span>
             {transaction.recurring && (
               <Badge variant="info">Tekrarlayan</Badge>
@@ -258,7 +258,6 @@ function TransactionModal({
             <GlassSelect
               value={category}
               onChange={setCategory}
-              placeholder="Kategori seçin"
               options={categories.map(c => ({ value: c, label: `${categoryIcons[c] || '📌'} ${c}` }))}
             />
           </div>
