@@ -14,8 +14,8 @@ export function GlassCard({ children, className = '', onClick, hover = true, gra
     <motion.div
       onClick={onClick}
       whileHover={hover ? { scale: 1.01, y: -1 } : undefined}
-      whileTap={onClick ? { scale: 0.98 } : undefined}
-      transition={{ type: 'tween', duration: 0.15 }}
+      whileTap={onClick ? { scale: 0.97 } : undefined}
+      transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }}
       className={`relative overflow-hidden rounded-2xl backdrop-blur-xl border border-white/10 shadow-2xl ${
         onClick ? 'cursor-pointer' : ''
       } ${className}`}
@@ -88,12 +88,12 @@ export function NeonButton({
       onClick={onClick}
       disabled={disabled}
       whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
-      transition={{ type: 'tween', duration: 0.1 }}
+      whileTap={{ scale: disabled ? 1 : 0.96 }}
+      transition={{ type: 'spring', stiffness: 600, damping: 28, mass: 0.4 }}
       className={`
         relative px-6 py-3 rounded-xl font-semibold text-white
         bg-gradient-to-r ${neonButtonVariants[variant]}
-        shadow-lg transition-all duration-200
+        shadow-lg transition-colors duration-100
         disabled:opacity-50 disabled:cursor-not-allowed
         focus:outline-none focus:ring-2 focus:ring-cyan-500/50
         ${className}
@@ -129,7 +129,7 @@ export function GlassInput({
         bg-white/5 border border-white/10
         text-white placeholder-white/30
         focus:outline-none focus:border-cyan-500/50 focus:bg-white/10
-        transition-all duration-200
+        transition-colors duration-100
         ${className}
       `}
       {...props}
@@ -157,7 +157,7 @@ export function GlassSelect({
         bg-white/5 border border-white/10
         text-white
         focus:outline-none focus:border-cyan-500/50
-        transition-all duration-200
+        transition-colors duration-100
         [&>option]:bg-slate-900 [&>option]:text-white
         ${className}
       `}
@@ -221,7 +221,7 @@ export function ProgressBar({ value, max, className = '', color = 'cyan' }: {
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${percent}%` }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
         className="absolute inset-y-0 left-0 rounded-full"
         style={{
           backgroundColor: barColor,
@@ -237,7 +237,7 @@ export function LoadingSpinner({ className = '' }: { className?: string }) {
     <div className={`flex items-center justify-center ${className}`}>
       <motion.div
         animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+        transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
         className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full"
       />
     </div>

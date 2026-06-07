@@ -25,6 +25,17 @@ const mobileNavItems = [
   { id: 'settings', label: 'Ayarlar', icon: Settings },
 ];
 
+/* ============================================
+   120Hz SPRING CONFIGS
+   - stiffness: 500+ → çok hızlı tepki (8ms underdamped)
+   - damping: 28-32 → minimal overshoot, snappy feel
+   - mass: 0.5 → hafif element hissi
+   ============================================ */
+const spring120 = { type: 'spring' as const, stiffness: 500, damping: 30, mass: 0.5 };
+const spring120Snappy = { type: 'spring' as const, stiffness: 600, damping: 28, mass: 0.4 };
+const spring120Sheet = { type: 'spring' as const, stiffness: 400, damping: 32, mass: 0.8 };
+const tween120 = { type: 'tween' as const, duration: 0.08, ease: [0.2, 0, 0, 1] as const };
+
 export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [fabType, setFabType] = useState<'income' | 'expense' | 'investment' | null>(null);
@@ -47,9 +58,9 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         <main className="relative z-10 p-4">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={spring120}
           >
             {children}
           </motion.div>
@@ -59,9 +70,10 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         <motion.button
           onClick={() => setIsFabOpen(!isFabOpen)}
           className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.92 }}
           animate={{ rotate: isFabOpen ? 45 : 0 }}
+          transition={spring120Snappy}
         >
           <Plus className="w-7 h-7 text-white" />
         </motion.button>
@@ -70,9 +82,10 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         <AnimatePresence>
           {isFabOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              initial={{ opacity: 0, scale: 0.9, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              exit={{ opacity: 0, scale: 0.9, y: 12 }}
+              transition={spring120}
               className="fixed bottom-40 right-4 z-50 flex flex-col gap-3"
             >
               <FabMenuItem
@@ -105,8 +118,9 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
                 <motion.button
                   key={item.id}
                   onClick={() => onTabChange(item.id)}
-                  whileTap={{ scale: 0.9 }}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
+                  whileTap={{ scale: 0.88 }}
+                  transition={tween120}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors duration-100 ${
                     activeTab === item.id
                       ? 'text-cyan-400'
                       : 'text-white/50'
@@ -118,6 +132,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
                     <motion.div
                       layoutId="activeTab"
                       className="absolute -bottom-0 w-12 h-1 bg-cyan-400 rounded-full"
+                      transition={spring120}
                     />
                   )}
                 </motion.button>
@@ -143,6 +158,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={tween120}
               className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
               onClick={() => setIsFabOpen(false)}
             />
@@ -175,6 +191,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
       <motion.aside
         initial={{ x: -280 }}
         animate={{ x: 0 }}
+        transition={spring120}
         className="fixed left-0 top-0 h-full w-64 bg-slate-900/80 backdrop-blur-xl border-r border-white/10 z-40"
       >
         {/* Logo */}
@@ -199,8 +216,9 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
               key={item.id}
               onClick={() => onTabChange(item.id)}
               whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+              whileTap={{ scale: 0.97 }}
+              transition={tween120}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-100 ${
                 activeTab === item.id
                   ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30'
                   : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -218,9 +236,9 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         <div className="p-4 lg:p-8">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={spring120}
           >
             {children}
           </motion.div>
@@ -246,8 +264,9 @@ function FabMenuItem({ icon: Icon, label, color, onClick }: {
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.92 }}
+      transition={spring120Snappy}
       className={`flex items-center gap-2 px-4 py-2 rounded-full ${colorClasses[color as keyof typeof colorClasses]} shadow-lg`}
     >
       <Icon className="w-4 h-4" />
@@ -258,7 +277,8 @@ function FabMenuItem({ icon: Icon, label, color, onClick }: {
 
 // Quick Add Bottom Sheet
 function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | 'investment'; onClose: () => void }) {
-  const { addTransaction, addPortfolioItem } = useFinansStore();
+  const addTransaction = useFinansStore((s) => s.addTransaction);
+  const addPortfolioItem = useFinansStore((s) => s.addPortfolioItem);
   const [category, setCategory] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -298,6 +318,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={tween120}
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
@@ -305,9 +326,10 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 25 }}
+        transition={spring120Sheet}
         className="absolute bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
         onClick={(e) => e.stopPropagation()}
+        style={{ willChange: 'transform' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
@@ -322,7 +344,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto" data-scroll>
           {type !== 'investment' && (
             <div>
               <label className="block text-sm text-white/60 mb-2">Kategori</label>
@@ -331,7 +353,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
                   <button
                     key={cat}
                     onClick={() => setCategory(cat)}
-                    className={`px-3 py-2 rounded-xl text-sm transition-all ${
+                    className={`px-3 py-2 rounded-xl text-sm transition-colors duration-100 ${
                       category === cat
                         ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                         : 'bg-white/5 text-white/60 hover:bg-white/10'
@@ -373,7 +395,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
                   <button
                     key={key}
                     onClick={() => setMood(mood === key ? '' : key as 'happy' | 'stressed' | 'neutral' | 'excited' | 'sad')}
-                    className={`w-10 h-10 rounded-xl text-xl transition-all ${
+                    className={`w-10 h-10 rounded-xl text-xl transition-colors duration-100 ${
                       mood === key ? 'bg-white/20 border border-white/30' : 'bg-white/5'
                     }`}
                   >
@@ -389,7 +411,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
         <div className="p-6 border-t border-white/10 flex gap-3 safe-area-bottom">
           <button
             onClick={onClose}
-            className="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
+            className="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white/60 hover:bg-white/10 transition-colors duration-100"
           >
             İptal
           </button>
@@ -432,7 +454,7 @@ export function SwipeableRow({
     <motion.div
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.2}
+      dragElastic={0.15}
       onDragEnd={handleDragEnd}
       style={{ x }}
       className="relative lg:static"
