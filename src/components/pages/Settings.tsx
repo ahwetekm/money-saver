@@ -1,22 +1,35 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { 
   Moon, Sun, Database, Download, Upload, 
   Key, AlertTriangle, CheckCircle, Info, Trash2,
-  RefreshCw, Wifi, WifiOff, Loader2
+  RefreshCw, Copy, Check, Wifi, WifiOff, Share2,
+  QrCode, Link2, Users
 } from 'lucide-react';
 import { GlassCard, NeonButton, GlassInput, Badge } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { useSync, useSyncStatus } from '../../lib/sync';
+import { useErrors, ErrorType, ErrorSeverity } from '../../lib/errors';
 import { downloadFile } from '../../lib/utils';
 
 export function Settings() {
   const { settings, updateSettings, exportData, importData } = useFinansStore();
-  const [gunKey, setGunKey] = useState(settings.gunKey);
+  const [syncKeyInput, setSyncKeyInput] = useState('');
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [copied, setCopied] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { status, connect, disconnect, isConnected } = useSync();
+  
+  const { status, connect, disconnect, generateKey, isConnected, syncKey } = useSync();
+  const { errors, dismiss, clearAll, hasErrors } = useErrors();
+
+  // Initialize sync key input from existing
+  useEffect(() => {
+    if (syncKey) {
+      setSyncKeyInput(syncKey);
+    }
+  }, [syncKey]);
 
   const handleExport = async () => {
     try {
@@ -48,15 +61,22 @@ export function Settings() {
     }
   };
 
-  const handleSaveGunKey = async () => {
-    if (gunKey.length < 8) {
+  const handleGenerateKey = () => {
+    const newKey = generateKey();
+    setSyncKeyInput(newKey);
+  };
+
+  const handleConnect = async () => {
+    if (syncKeyInput.length < 8) {
       alert('Sync anahtarı en az 8 karakter olmalıdır');
       return;
     }
     
-    const success = await connect(gunKey);
+    const success = await connect(syncKeyInput);
     if (success) {
-      updateSettings({ gunKey, syncEnabled: true });
+      updateSettings({ gunKey: syncKeyInput, syncEnabled: true });
+    } else {
+      alert('Bağlantı sağlanamadı. Lütfen tekrar deneyin.');
     }
   };
 
@@ -65,9 +85,33 @@ export function Settings() {
     updateSettings({ syncEnabled: false });
   };
 
+  const handleCopyKey = async () => {
+    if (syncKey) {
+      await navigator.clipboard.writeText(syncKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleShareKey = async () => {
+    if (syncKey && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Finans Sync Anahtarı',
+          text: `Bu anahtarı Finans uygulamasına girerek verilerimi senkronize edebilirsiniz: ${syncKey}`,
+        });
+      } catch (e) {
+        // User cancelled or error
+      }
+    } else {
+      handleCopyKey();
+    }
+  };
+
   const handleClearData = () => {
     if (confirm('Tüm veriler silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?')) {
       indexedDB.deleteDatabase('finans-app');
+      localStorage.clear();
       window.location.reload();
     }
   };
@@ -84,8 +128,169 @@ export function Settings() {
         <SyncStatusCard 
           status={status}
           isConnected={isConnected}
+          syncKey={syncKey}
           onDisconnect={handleDisconnect}
         />
+
+        {/* Error Notifications */}
+        {hasErrors && errors.length > 0 && (
+          <GlassCard className="p-4" gradient="linear-gradient(135deg, rgba(239,68,68,0.1), rgba(185,28,28,0.1))">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+                <span className="text-sm font-medium text-white">Bildirimler ({errors.length})</span>
+              </div>
+              <button
+                onClick={clearAll}
+                className="text-xs text-white/50 hover:text-white/70"
+              >
+                Tümünü Temizle
+              </button>
+            </div>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {errors.slice(0, 3).map((error) => (
+                <motion.div
+                  key={error.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="flex items-start justify-between gap-2 p-2 rounded-lg bg-white/5"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white/80 truncate">{error.message}</p>
+                    {error.details && (
+                      <p className="text-xs text-white/40 truncate mt-0.5">{error.details}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => dismiss(error.id)}
+                    className="text-white/40 hover:text-white/60 shrink-0"
+                  >
+                    ×
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          </GlassCard>
+        )}
+
+        {/* P2P Sync Settings */}
+        <GlassCard className="p-4 lg:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
+              <Users className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <h3 className="text-base lg:text-lg font-semibold text-white">P2P Senkronizasyon</h3>
+              <p className="text-xs lg:text-sm text-white/50">Cihazlar arası veri aktarımı</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {!isConnected ? (
+              <>
+                <div>
+                  <label className="block text-sm text-white/60 mb-2">Sync Anahtarı</label>
+                  <div className="flex gap-2">
+                    <GlassInput
+                      value={syncKeyInput}
+                      onChange={setSyncKeyInput}
+                      placeholder="En az 8 karakter..."
+                      className="flex-1"
+                    />
+                    <button
+                      onClick={handleGenerateKey}
+                      className="px-3 py-2 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors text-sm whitespace-nowrap"
+                    >
+                      Oluştur
+                    </button>
+                  </div>
+                  <p className="text-xs text-white/40 mt-2">
+                    Yeni bir anahtar oluşturun veya mevcut bir anahtarı girin
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleConnect}
+                  disabled={syncKeyInput.length < 8 || status === 'connecting'}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {status === 'connecting' ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Bağlanıyor...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="w-4 h-4" />
+                      Bağlan
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <div className="space-y-3">
+                {/* Connected State */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                    <span className="text-emerald-400 font-medium">Bağlı</span>
+                  </div>
+                  <button
+                    onClick={handleDisconnect}
+                    className="text-xs px-3 py-1 rounded-lg bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
+                  >
+                    Bağlantıyı Kes
+                  </button>
+                </div>
+
+                {/* Sync Key Display */}
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-white/50">Sync Anahtarı</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={handleCopyKey}
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                        title="Kopyala"
+                      >
+                        {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/60" />}
+                      </button>
+                      <button
+                        onClick={handleShareKey}
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                        title="Paylaş"
+                      >
+                        <Share2 className="w-4 h-4 text-white/60" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="font-mono text-white text-sm break-all">{syncKey}</p>
+                </div>
+
+                {/* Instructions */}
+                <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                  <p className="text-xs text-white/70">
+                    <strong className="text-cyan-400">Nasıl kullanılır:</strong> Bu anahtarı diğer cihazınıza kurun. 
+                    Her iki cihazda da aynı anahtarı kullanarak verileriniz senkronize edilecek.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Info Box */}
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-start gap-2">
+                <Info className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
+                <div className="text-xs text-white/70">
+                  <p className="font-medium text-white mb-1">P2P Senkronizasyon</p>
+                  <p>Verileriniz doğrudan cihazlar arasında aktarılır. İnternet bağlantısı gereklidir. 
+                  İlk bağlantı birkaç saniye sürebilir.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
 
         {/* Theme Settings */}
         <GlassCard className="p-4 lg:p-6">
@@ -125,55 +330,6 @@ export function Settings() {
           </div>
         </GlassCard>
 
-        {/* Sync Settings */}
-        <GlassCard className="p-4 lg:p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-              <Key className="w-5 h-5 text-cyan-400" />
-            </div>
-            <div>
-              <h3 className="text-base lg:text-lg font-semibold text-white">P2P Senkronizasyon</h3>
-              <p className="text-xs lg:text-sm text-white/50">Cihazlar arası veri eşitleme</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-white/60 mb-2">Sync Anahtarı</label>
-              <div className="flex gap-2">
-                <GlassInput
-                  value={gunKey}
-                  onChange={setGunKey}
-                  placeholder="En az 8 karakter..."
-                  className="flex-1"
-                />
-                {isConnected ? (
-                  <button
-                    onClick={handleDisconnect}
-                    className="px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm"
-                  >
-                    Bağlantıyı Kes
-                  </button>
-                ) : (
-                  <NeonButton onClick={handleSaveGunKey}>
-                    Bağlan
-                  </NeonButton>
-                )}
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-              <div className="flex items-start gap-2">
-                <Info className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
-                <div className="text-xs text-white/70">
-                  <p className="font-medium text-white mb-1">Nasıl çalışır?</p>
-                  <p>Aynı sync anahtarını kullanan tüm cihazlar verilerinizi görebilir. Anahtarınızı güvenli tutun.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-
         {/* Data Management */}
         <GlassCard className="p-4 lg:p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -196,7 +352,7 @@ export function Settings() {
                 <Download className="w-5 h-5 text-emerald-400" />
                 <div className="text-left">
                   <h4 className="font-medium text-white text-sm">Verileri Dışa Aktar</h4>
-                  <p className="text-xs text-white/50">JSON olarak indir</p>
+                  <p className="text-xs text-white/50">JSON dosyası indir</p>
                 </div>
               </div>
               <Badge variant="success">İndir</Badge>
@@ -265,15 +421,19 @@ export function Settings() {
             </div>
             <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-white/60">Veri Depolama</span>
-              <span className="text-white">IndexedDB</span>
+              <span className="text-white">IndexedDB (Yerel)</span>
             </div>
             <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-white/60">Senkronizasyon</span>
-              <span className="text-white">Gun.js P2P</span>
+              <span className="text-cyan-400">Gun.js P2P</span>
             </div>
-            <div className="flex justify-between py-2">
+            <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-white/60">PWA</span>
               <span className="text-emerald-400">Aktif</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-white/60">Offline Mod</span>
+              <span className="text-emerald-400">Destekleniyor</span>
             </div>
           </div>
 
@@ -292,58 +452,64 @@ export function Settings() {
 function SyncStatusCard({ 
   status, 
   isConnected,
+  syncKey,
   onDisconnect 
 }: { 
   status: string; 
   isConnected: boolean;
+  syncKey: string;
   onDisconnect: () => void;
 }) {
   const statusConfig = {
     connected: { 
-      icon: Wifi, 
+      icon: CheckCircle, 
       color: 'text-emerald-400', 
       bg: 'bg-emerald-500/10',
       border: 'border-emerald-500/30',
-      label: 'Bağlı',
-      description: 'Verileriniz senkronize ediliyor'
+      label: 'P2P Bağlı',
+      description: 'Senkronizasyon aktif',
+      animate: false
     },
     syncing: { 
-      icon: Loader2, 
+      icon: RefreshCw, 
       color: 'text-cyan-400', 
       bg: 'bg-cyan-500/10',
       border: 'border-cyan-500/30',
       label: 'Senkronize Ediliyor',
-      description: 'Lütfen bekleyin...'
+      description: 'Veriler aktarılıyor...',
+      animate: true
     },
     connecting: { 
-      icon: Loader2, 
+      icon: RefreshCw, 
       color: 'text-amber-400', 
       bg: 'bg-amber-500/10',
       border: 'border-amber-500/30',
       label: 'Bağlanıyor',
-      description: 'P2P ağına bağlanılıyor...'
+      description: 'P2P ağına bağlanılıyor...',
+      animate: true
     },
-    disconnected: { 
+    offline: { 
       icon: WifiOff, 
       color: 'text-white/40', 
       bg: 'bg-white/5',
       border: 'border-white/10',
       label: 'Çevrimdışı',
-      description: 'Veriler sadece bu cihazda'
+      description: 'P2P senkronizasyonu kapalı',
+      animate: false
     },
     error: { 
-      icon: WifiOff, 
+      icon: AlertTriangle, 
       color: 'text-red-400', 
       bg: 'bg-red-500/10',
       border: 'border-red-500/30',
       label: 'Bağlantı Hatası',
-      description: 'Lütfen tekrar deneyin'
+      description: 'Tekrar deneyin',
+      animate: false
     },
   };
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.disconnected;
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.offline;
   const Icon = config.icon;
-  const isAnimating = status === 'syncing' || status === 'connecting';
 
   return (
     <motion.div
@@ -354,21 +520,13 @@ function SyncStatusCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${config.bg}`}>
-            <Icon className={`w-5 h-5 ${config.color} ${isAnimating ? 'animate-spin' : ''}`} />
+            <Icon className={`w-5 h-5 ${config.color} ${config.animate ? 'animate-spin' : ''}`} />
           </div>
           <div>
             <p className={`font-medium ${config.color}`}>{config.label}</p>
             <p className="text-xs text-white/50">{config.description}</p>
           </div>
         </div>
-        {isConnected && (
-          <button
-            onClick={onDisconnect}
-            className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
-          >
-            Bağlantıyı Kes
-          </button>
-        )}
       </div>
     </motion.div>
   );

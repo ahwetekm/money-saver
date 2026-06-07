@@ -244,12 +244,7 @@ input[type="checkbox"]:checked::after {
     min-height: 44px;
   }
   
-  /* Remove hover effects on touch */
-  .hover\\:bg-white\\/10:hover {
-    background-color: transparent;
-  }
-  
-  /* Active states instead */
+  /* Remove hover effects on touch - use :active instead */
   button:active {
     opacity: 0.8;
   }

@@ -2,7 +2,8 @@ import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from '
 import { ReactNode, useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Wallet, TrendingUp, Target, Calendar, 
-  Settings, Plus, X, TrendingDown, Bitcoin, Building2
+  Settings, Plus, X, TrendingDown, Bitcoin, Building2,
+  CheckCircle, AlertTriangle, WifiOff, RefreshCw
 } from 'lucide-react';
 import { GlassCard, NeonButton, GlassInput, GlassSelect } from '../ui/GlassCard';
 import { useFinansStore } from '../../store/useFinansStore';
@@ -10,7 +11,6 @@ import { Transaction, PortfolioItem } from '../../types';
 import { getCurrentDate, getCurrentMonth } from '../../lib/utils';
 import { incomeCategories, expenseCategories, categoryIcons, moodEmojis } from '../../data/mockData';
 import { useSyncStatus } from '../../lib/sync';
-import { RefreshCw, Wifi, WifiOff, Loader2 } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -247,14 +247,14 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
 // Sync Status Indicator Component
 function SyncStatusIndicator({ status }: { status: string }) {
   const statusConfig = {
-    connected: { icon: Wifi, color: 'text-emerald-400', label: 'Bağlı' },
-    syncing: { icon: Loader2, color: 'text-cyan-400', label: 'Senkronize Ediliyor...' },
-    connecting: { icon: Loader2, color: 'text-amber-400', label: 'Bağlanıyor...' },
-    disconnected: { icon: WifiOff, color: 'text-white/40', label: 'Çevrimdışı' },
-    error: { icon: WifiOff, color: 'text-red-400', label: 'Bağlantı Hatası' },
+    connected: { icon: CheckCircle, color: 'text-emerald-400', label: 'P2P' },
+    syncing: { icon: RefreshCw, color: 'text-cyan-400', label: 'Sync' },
+    connecting: { icon: RefreshCw, color: 'text-amber-400', label: '...' },
+    offline: { icon: WifiOff, color: 'text-white/40', label: 'Offline' },
+    error: { icon: AlertTriangle, color: 'text-red-400', label: 'Hata' },
   };
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.disconnected;
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.offline;
   const Icon = config.icon;
   const isAnimating = status === 'syncing' || status === 'connecting';
 

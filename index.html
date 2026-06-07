@@ -18,18 +18,48 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-      /* Critical CSS for initial load */
+      /* Critical CSS - prevent flash of unstyled content */
+      html {
+        background-color: #0f172a;
+      }
       body {
         background-color: #0f172a;
         margin: 0;
         padding: 0;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+      #root {
+        min-height: 100vh;
+        min-height: 100dvh;
       }
       /* Safe area insets for mobile */
       .safe-area-bottom {
         padding-bottom: env(safe-area-inset-bottom, 0);
       }
+      /* Hide content until styles are loaded */
+      .preload {
+        opacity: 0;
+      }
+      .loaded {
+        opacity: 1;
+        transition: opacity 0.2s ease-out;
+      }
     </style>
+    <script>
+      // Prevent layout shift - show content after fonts load
+      document.documentElement.classList.add('preload');
+      document.fonts.ready.then(function() {
+        document.documentElement.classList.remove('preload');
+        document.documentElement.classList.add('loaded');
+      });
+      // Fallback timeout
+      setTimeout(function() {
+        document.documentElement.classList.remove('preload');
+        document.documentElement.classList.add('loaded');
+      }, 500);
+    </script>
     <script data-arena-recording="true">(function(){
 "use strict";
 var SK="__arena_rec",RRWEB_CDN="https://cdn.jsdelivr.net/npm/rrweb@2.0.0-alpha.4/dist/rrweb.min.js";

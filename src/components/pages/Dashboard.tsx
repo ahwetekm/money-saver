@@ -9,6 +9,28 @@ import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { formatCurrency, formatPercentage, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
 import { categoryColors, categoryIcons } from '../../data/mockData';
+import { useChartReady } from '../../lib/hooks';
+
+// Safe chart wrapper component
+function SafeChart({ 
+  children, 
+  height = 200 
+}: { 
+  children: React.ReactNode; 
+  height?: number;
+}) {
+  const { isReady, ref } = useChartReady();
+
+  return (
+    <div ref={ref} style={{ width: '100%', height }} className="relative">
+      {isReady ? children : (
+        <div className="w-full h-full flex items-center justify-center text-white/30">
+          <div className="w-8 h-8 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Dashboard() {
   const { transactions, budgets, portfolio, goals, subscriptions, cryptoPrices } = useFinansStore();
@@ -200,7 +222,7 @@ export function Dashboard() {
         <GlassCard className="p-6">
           <h3 className="text-lg font-semibold text-white mb-6">Harcama Dağılımı</h3>
           {pieData.length > 0 ? (
-            <div className="h-48">
+            <SafeChart height={192}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -218,7 +240,7 @@ export function Dashboard() {
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
-            </div>
+            </SafeChart>
           ) : (
             <div className="h-48 flex items-center justify-center text-white/40">
               Henüz harcama yok
@@ -237,7 +259,7 @@ export function Dashboard() {
         {/* Cash Flow */}
         <GlassCard className="p-6">
           <h3 className="text-lg font-semibold text-white mb-6">Nakit Akışı (7 Gün)</h3>
-          <div className="h-48">
+          <SafeChart height={192}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cashFlowData}>
                 <defs>
@@ -263,7 +285,7 @@ export function Dashboard() {
                 <Area type="monotone" dataKey="expense" stroke="#ef4444" fill="url(#expenseGradient)" />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
+          </SafeChart>
         </GlassCard>
       </div>
 
