@@ -56,6 +56,9 @@ interface FinansState {
   // Settings
   updateSettings: (settings: Partial<AppSettings>) => Promise<void>;
   
+  // User Actions
+  resetData: () => Promise<void>;
+  
   // Crypto prices
   setCryptoPrices: (prices: CryptoPrice[]) => void;
 }
@@ -275,6 +278,18 @@ export const useFinansStore = create<FinansState>((set, get) => ({
     const newSettings = { ...get().settings, ...settings };
     await api.updateSettings(newSettings);
     set({ settings: newSettings });
+  },
+
+  resetData: async () => {
+    await api.resetUserData();
+    set({
+      transactions: [],
+      budgets: [],
+      portfolio: [],
+      goals: [],
+      subscriptions: [],
+      delayedGratifications: []
+    });
   },
 
   setCryptoPrices: (prices) => set({ cryptoPrices: prices }),
