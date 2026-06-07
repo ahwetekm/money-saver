@@ -4,7 +4,7 @@ import {
   Transaction, Budget, PortfolioItem, Goal, Subscription, 
   DelayedGratification, AppSettings, CryptoPrice 
 } from '../types';
-import * as db from '../lib/db';
+import * as api from '../lib/api';
 
 interface FinansState {
   // Data
@@ -58,10 +58,6 @@ interface FinansState {
   
   // Crypto prices
   setCryptoPrices: (prices: CryptoPrice[]) => void;
-  
-  // Export/Import
-  exportData: () => Promise<string>;
-  importData: (jsonString: string) => Promise<void>;
 }
 
 const defaultSettings: AppSettings = {
@@ -85,6 +81,12 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   initialize: async () => {
     try {
+      const token = api.getToken();
+      if (!token) {
+        set({ isLoading: false, initialized: true });
+        return;
+      }
+
       const [
         transactions,
         budgets,
@@ -94,13 +96,13 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         delayedGratifications,
         settings,
       ] = await Promise.all([
-        db.getAllTransactions(),
-        db.getAllBudgets(),
-        db.getAllPortfolioItems(),
-        db.getAllGoals(),
-        db.getAllSubscriptions(),
-        db.getAllDelayedGratifications(),
-        db.getSettings(),
+        api.fetchTransactions(),
+        api.fetchBudgets(),
+        api.fetchPortfolio(),
+        api.fetchGoals(),
+        api.fetchSubscriptions(),
+        api.fetchDelayedGratifications(),
+        api.fetchSettings(),
       ]);
 
       set({
@@ -122,7 +124,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   addTransaction: async (transaction) => {
     const newTransaction = { ...transaction, id: uuidv4() } as Transaction;
-    await db.addTransaction(newTransaction);
+    await api.createTransaction(newTransaction);
     set((state) => ({ transactions: [...state.transactions, newTransaction] }));
   },
 
@@ -130,7 +132,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
     const transaction = get().transactions.find((t) => t.id === id);
     if (transaction) {
       const updated = { ...transaction, ...updates };
-      await db.updateTransaction(updated);
+      await api.updateTransaction(updated);
       set((state) => ({
         transactions: state.transactions.map((t) => (t.id === id ? updated : t)),
       }));
@@ -138,7 +140,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
   },
 
   deleteTransaction: async (id) => {
-    await db.deleteTransaction(id);
+    await api.deleteTransaction(id);
     set((state) => ({
       transactions: state.transactions.filter((t) => t.id !== id),
     }));
@@ -146,7 +148,11 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   saveBudget: async (budget) => {
     const newBudget = { ...budget, id: budget.id || uuidv4() } as Budget;
-    await db.saveBudget(newBudget);
+    if (budget.id) {
+      await api.updateBudget(newBudget);
+    } else {
+      await api.createBudget(newBudget);
+    }
     set((state) => ({
       budgets: state.budgets.some((b) => b.id === newBudget.id)
         ? state.budgets.map((b) => (b.id === newBudget.id ? newBudget : b))
@@ -155,7 +161,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
   },
 
   deleteBudget: async (id) => {
-    await db.deleteBudget(id);
+    await api.deleteBudget(id);
     set((state) => ({
       budgets: state.budgets.filter((b) => b.id !== id),
     }));
@@ -163,7 +169,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   addPortfolioItem: async (item) => {
     const newItem = { ...item, id: uuidv4() } as PortfolioItem;
-    await db.savePortfolioItem(newItem);
+    await api.createPortfolioItem(newItem);
     set((state) => ({ portfolio: [...state.portfolio, newItem] }));
   },
 
@@ -171,7 +177,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
     const item = get().portfolio.find((p) => p.id === id);
     if (item) {
       const updated = { ...item, ...updates };
-      await db.savePortfolioItem(updated);
+      await api.updatePortfolioItem(updated);
       set((state) => ({
         portfolio: state.portfolio.map((p) => (p.id === id ? updated : p)),
       }));
@@ -179,7 +185,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
   },
 
   deletePortfolioItem: async (id) => {
-    await db.deletePortfolioItem(id);
+    await api.deletePortfolioItem(id);
     set((state) => ({
       portfolio: state.portfolio.filter((p) => p.id !== id),
     }));
@@ -193,7 +199,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         ...item,
         transactions: [...item.transactions, newTransaction],
       };
-      await db.savePortfolioItem(updatedItem);
+      await api.updatePortfolioItem(updatedItem);
       set((state) => ({
         portfolio: state.portfolio.map((p) => (p.id === itemId ? updatedItem : p)),
       }));
@@ -202,7 +208,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   addGoal: async (goal) => {
     const newGoal = { ...goal, id: uuidv4() } as Goal;
-    await db.saveGoal(newGoal);
+    await api.createGoal(newGoal);
     set((state) => ({ goals: [...state.goals, newGoal] }));
   },
 
@@ -210,7 +216,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
     const goal = get().goals.find((g) => g.id === id);
     if (goal) {
       const updated = { ...goal, ...updates };
-      await db.saveGoal(updated);
+      await api.updateGoal(updated);
       set((state) => ({
         goals: state.goals.map((g) => (g.id === id ? updated : g)),
       }));
@@ -218,7 +224,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
   },
 
   deleteGoal: async (id) => {
-    await db.deleteGoal(id);
+    await api.deleteGoal(id);
     set((state) => ({
       goals: state.goals.filter((g) => g.id !== id),
     }));
@@ -226,7 +232,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   addSubscription: async (subscription) => {
     const newSubscription = { ...subscription, id: uuidv4() } as Subscription;
-    await db.saveSubscription(newSubscription);
+    await api.createSubscription(newSubscription);
     set((state) => ({ subscriptions: [...state.subscriptions, newSubscription] }));
   },
 
@@ -234,7 +240,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
     const subscription = get().subscriptions.find((s) => s.id === id);
     if (subscription) {
       const updated = { ...subscription, ...updates };
-      await db.saveSubscription(updated);
+      await api.updateSubscription(updated);
       set((state) => ({
         subscriptions: state.subscriptions.map((s) => (s.id === id ? updated : s)),
       }));
@@ -242,7 +248,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
   },
 
   deleteSubscription: async (id) => {
-    await db.deleteSubscription(id);
+    await api.deleteSubscription(id);
     set((state) => ({
       subscriptions: state.subscriptions.filter((s) => s.id !== id),
     }));
@@ -250,7 +256,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   addDelayedGratification: async (item) => {
     const newItem = { ...item, id: uuidv4() } as DelayedGratification;
-    await db.saveDelayedGratification(newItem);
+    await api.createDelayedGratification(newItem);
     set((state) => ({ delayedGratifications: [...state.delayedGratifications, newItem] }));
   },
 
@@ -258,7 +264,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
     const item = get().delayedGratifications.find((d) => d.id === id);
     if (item) {
       const updated = { ...item, ...updates };
-      await db.saveDelayedGratification(updated);
+      await api.updateDelayedGratification(updated);
       set((state) => ({
         delayedGratifications: state.delayedGratifications.map((d) => (d.id === id ? updated : d)),
       }));
@@ -267,18 +273,9 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
   updateSettings: async (settings) => {
     const newSettings = { ...get().settings, ...settings };
-    await db.saveSettings(newSettings);
+    await api.updateSettings(newSettings);
     set({ settings: newSettings });
   },
 
   setCryptoPrices: (prices) => set({ cryptoPrices: prices }),
-
-  exportData: async () => {
-    return await db.exportAllData();
-  },
-
-  importData: async (jsonString) => {
-    await db.importAllData(jsonString);
-    await get().initialize();
-  },
 }));

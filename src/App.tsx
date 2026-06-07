@@ -1,5 +1,5 @@
-import { useState, useEffect, Suspense } from 'react';
-import { Layout, PageHeader } from './components/layout/MobileLayout';
+import React, { useState, useEffect, Suspense } from 'react';
+import { Layout } from './components/layout/MobileLayout';
 import { Dashboard } from './components/pages/Dashboard';
 import { Transactions } from './components/pages/Transactions';
 import { Portfolio } from './components/pages/Portfolio';
@@ -8,10 +8,6 @@ import { Goals } from './components/pages/Goals';
 import { Subscriptions } from './components/pages/Subscriptions';
 import { Settings } from './components/pages/Settings';
 import { useFinansStore } from './store/useFinansStore';
-import { setupGlobalErrorHandlers, ErrorHelpers } from './lib/errors';
-
-// Setup global error handlers immediately
-setupGlobalErrorHandlers();
 
 // Loading screen component
 function LoadingScreen() {
@@ -68,7 +64,6 @@ class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
-    ErrorHelpers.storageError(`Render hatası: ${error.message}`);
   }
 
   render() {
@@ -83,9 +78,6 @@ class ErrorBoundary extends React.Component<
     return this.props.children;
   }
 }
-
-// Import React for ErrorBoundary
-import React from 'react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -103,7 +95,6 @@ function App() {
         });
       } catch (error) {
         console.error('Initialization failed:', error);
-        ErrorHelpers.storageError('Uygulama başlatılamadı');
         setIsReady(true);
       }
     };
