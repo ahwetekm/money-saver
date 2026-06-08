@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { Layout } from './components/layout/MobileLayout';
 import { useFinansStore } from './store/useFinansStore';
 
@@ -82,6 +83,43 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+function SyncStatus() {
+  const isOnline = useFinansStore((s) => s.isOnline);
+  const isSyncing = useFinansStore((s) => s.isSyncing);
+  const pendingSyncCount = useFinansStore((s) => s.pendingSyncCount);
+
+  if (isOnline && !isSyncing && pendingSyncCount === 0) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[60] flex justify-center pointer-events-none">
+      <div className={`mt-2 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 pointer-events-auto backdrop-blur-md border shadow-lg ${
+        !isOnline
+          ? 'bg-red-500/20 text-red-300 border-red-500/30'
+          : isSyncing
+          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+          : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+      }`}>
+        {!isOnline ? (
+          <>
+            <WifiOff className="w-3.5 h-3.5" />
+            <span>Çevrimdışı</span>
+          </>
+        ) : isSyncing ? (
+          <>
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            <span>Senkronize ediliyor...</span>
+          </>
+        ) : pendingSyncCount > 0 ? (
+          <>
+            <Wifi className="w-3.5 h-3.5" />
+            <span>{pendingSyncCount} değişiklik beklemede</span>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isReady, setIsReady] = useState(false);
@@ -133,6 +171,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <SyncStatus />
       <Layout activeTab={activeTab} onTabChange={setActiveTab}>
         <Suspense fallback={<LoadingScreen />}>
           {renderPage()}

@@ -4,7 +4,7 @@ import { Moon, Sun, Info, LogOut, User, Lock, AlertTriangle, Trash2, CheckCircle
 import { GlassCard, GlassInput, NeonButton } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
-import { removeToken, updateUser } from '../../lib/api';
+import { removeToken, updateUser } from '../../lib/offlineApi';
 
 export function Settings() {
   const { settings, updateSettings, resetData } = useFinansStore();
