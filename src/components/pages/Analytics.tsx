@@ -40,7 +40,7 @@ export function Analytics() {
   // Projection calculation
   const projectionData = useMemo(() => {
     const currentSavings = portfolio.reduce((sum, p) => sum + p.currentPrice * p.quantity, 0);
-    const data = [];
+    const data: { year: string; value: number; contributions: number }[] = [];
     
     for (let year = 0; year <= projectionYears; year++) {
       const value = calculateCompoundInterest(currentSavings, monthlySaving, annualRate, year);

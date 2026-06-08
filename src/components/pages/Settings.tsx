@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, Info, LogOut, User, Lock, AlertTriangle, Trash2, CheckCircle } from 'lucide-react';
+import { Moon, Sun, Info, LogOut, User, Lock, AlertTriangle, Trash2, CheckCircle, Cloud, CloudOff, RefreshCw, Wifi, WifiOff, Database, HardDrive } from 'lucide-react';
 import { GlassCard, GlassInput, NeonButton } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { removeToken, updateUser } from '../../lib/api';
 
 export function Settings() {
-  const { settings, updateSettings, resetData } = useFinansStore();
+  const { settings, updateSettings, resetData, isOnline, syncStatus, pendingSyncCount, syncNow } = useFinansStore();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -167,6 +167,91 @@ export function Settings() {
           </div>
         </GlassCard>
 
+        {/* Sync & Offline Status */}
+        <GlassCard className="p-4 lg:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20">
+              <Database className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <h3 className="text-base lg:text-lg font-semibold text-white">Senkronizasyon</h3>
+              <p className="text-xs lg:text-sm text-white/50">Offline-first veri yönetimi</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {/* Connection Status */}
+            <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5">
+              <div className="flex items-center gap-2">
+                {isOnline ? (
+                  <Wifi className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <WifiOff className="w-4 h-4 text-amber-400" />
+                )}
+                <span className="text-sm text-white/80">Bağlantı Durumu</span>
+              </div>
+              <span className={`text-sm font-medium ${isOnline ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
+              </span>
+            </div>
+
+            {/* Sync Status */}
+            <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5">
+              <div className="flex items-center gap-2">
+                {syncStatus === 'syncing' ? (
+                  <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
+                ) : syncStatus === 'error' ? (
+                  <CloudOff className="w-4 h-4 text-red-400" />
+                ) : (
+                  <Cloud className="w-4 h-4 text-emerald-400" />
+                )}
+                <span className="text-sm text-white/80">Sync Durumu</span>
+              </div>
+              <span className={`text-sm font-medium ${
+                syncStatus === 'syncing' ? 'text-blue-400' :
+                syncStatus === 'error' ? 'text-red-400' :
+                syncStatus === 'complete' ? 'text-emerald-400' : 'text-white/60'
+              }`}>
+                {syncStatus === 'syncing' ? 'Senkronize ediliyor...' :
+                 syncStatus === 'error' ? 'Hata' :
+                 syncStatus === 'complete' ? 'Tamamlandı' : 'Bekliyor'}
+              </span>
+            </div>
+
+            {/* Pending Changes */}
+            <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5">
+              <div className="flex items-center gap-2">
+                <HardDrive className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm text-white/80">Bekleyen Değişiklik</span>
+              </div>
+              <span className={`text-sm font-medium ${pendingSyncCount > 0 ? 'text-orange-400' : 'text-emerald-400'}`}>
+                {pendingSyncCount}
+              </span>
+            </div>
+
+            {/* Manual Sync Button */}
+            <button
+              onClick={syncNow}
+              disabled={!isOnline || syncStatus === 'syncing'}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-all text-sm font-medium ${
+                !isOnline || syncStatus === 'syncing'
+                  ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30'
+              }`}
+            >
+              <RefreshCw className={`w-4 h-4 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+              {syncStatus === 'syncing' ? 'Senkronize ediliyor...' : 'Şimdi Senkronize Et'}
+            </button>
+
+            {/* Info text */}
+            <p className="text-xs text-white/40 text-center mt-2">
+              {isOnline 
+                ? 'Tüm değişiklikler otomatik olarak senkronize edilir.' 
+                : 'Değişiklikleriniz cihazınıza kaydedildi. Bağlantı kurulduğunda otomatik senkronize edilecek.'}
+            </p>
+          </div>
+        </GlassCard>
+
         {/* Danger Zone */}
         <GlassCard className="p-4 lg:p-6 border-red-500/20">
           <div className="flex items-center gap-3 mb-4">
@@ -245,15 +330,23 @@ export function Settings() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-white/60">Versiyon</span>
-              <span className="text-white">2.0.0</span>
+              <span className="text-white">3.0.0 - Offline First</span>
             </div>
             <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-white/60">Veritabanı</span>
-              <span className="text-emerald-400">Turso (Cloud)</span>
+              <span className="text-emerald-400">Turso + IndexedDB</span>
             </div>
             <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-white/60">PWA</span>
-              <span className="text-emerald-400">Aktif</span>
+              <span className="text-emerald-400">Aktif (Offline Destekli)</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-white/10">
+              <span className="text-white/60">Cache Stratejisi</span>
+              <span className="text-cyan-400">Offline-First</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-white/60">Sync Engine</span>
+              <span className="text-cyan-400">Queue-Based</span>
             </div>
           </div>
         </GlassCard>

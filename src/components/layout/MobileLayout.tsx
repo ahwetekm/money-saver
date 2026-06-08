@@ -5,6 +5,7 @@ import {
   Settings, Plus, X, TrendingDown, Bitcoin
 } from 'lucide-react';
 import { GlassCard, NeonButton, GlassInput } from '../ui/GlassCard';
+import { OfflineBanner, SyncIndicator } from '../ui/OfflineBanner';
 import { useFinansStore } from '../../store/useFinansStore';
 import { getCurrentDate } from '../../lib/utils';
 import { useIsMobile } from '../../lib/hooks';
@@ -47,6 +48,9 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-slate-950 text-white pb-20">
+        {/* Offline Banner */}
+        <OfflineBanner />
+        
         {/* Animated background */}
         <div className="fixed inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
@@ -113,7 +117,11 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         {/* Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 right-0 z-40">
           <div className="bg-slate-900/90 backdrop-blur-xl border-t border-white/10 px-2 py-2 safe-area-bottom">
-            <div className="flex justify-around items-center">
+            <div className="flex justify-around items-center relative">
+              {/* Sync indicator in mobile nav */}
+              <div className="absolute top-0 right-3 -translate-y-1/2">
+                <SyncIndicator />
+              </div>
               {mobileNavItems.map((item) => (
                 <motion.button
                   key={item.id}
@@ -171,6 +179,9 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
   // Desktop Layout
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+      {/* Offline Banner */}
+      <OfflineBanner />
+      
       {/* Animated background */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
@@ -200,10 +211,13 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
               <Wallet className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                Finans
-              </h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                  Finans
+                </h1>
+                <SyncIndicator />
+              </div>
               <p className="text-xs text-white/50">Akıllı Yönetim</p>
             </div>
           </div>

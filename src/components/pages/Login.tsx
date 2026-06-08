@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wallet, LogIn, UserPlus } from 'lucide-react';
+import { Wallet, LogIn, UserPlus, WifiOff } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { setToken } from '../../lib/api';
+import { setToken, getToken } from '../../lib/api';
 import { useFinansStore } from '../../store/useFinansStore';
 import { GlassCard, NeonButton, GlassInput, GlowText } from '../ui/GlassCard';
 
@@ -14,11 +14,28 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const initialize = useFinansStore((state) => state.initialize);
+  const isOnline = useFinansStore((state) => state.isOnline);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // If offline, check if we have a cached token
+    if (!navigator.onLine) {
+      const cachedToken = getToken();
+      if (cachedToken) {
+        // User has a cached token, allow offline access
+        await initialize();
+        navigate('/');
+        setLoading(false);
+        return;
+      } else {
+        setError('Çevrimdışısınız ve kayıtlı oturum bulunamadı. Lütfen internete bağlanın.');
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       const response = await fetch('/api/auth', {
@@ -93,6 +110,22 @@ export function Login() {
         className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
       >
         <GlassCard className="py-8 px-4 sm:px-10" hover={false}>
+          {/* Offline Notice */}
+          {!navigator.onLine && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30"
+            >
+              <WifiOff className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <p className="text-xs text-amber-400">
+                {getToken() 
+                  ? 'Çevrimdışısınız. Kayıtlı verilerinizle devam edebilirsiniz.' 
+                  : 'Çevrimdışısınız. Giriş yapmak için internet bağlantısı gerekli.'}
+              </p>
+            </motion.div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-white/80 mb-2">

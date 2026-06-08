@@ -10,11 +10,11 @@ export default defineConfig(async ({ mode }) => {
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icon-192x192.png', 'icon-512x512.png'],
+      includeAssets: ['favicon.svg', 'icon-192x192.svg'],
       manifest: {
         name: 'Finans - Akıllı Yönetim',
         short_name: 'Finans',
-        description: 'Akıllı ve Local-First Finans Platformu',
+        description: 'Akıllı ve Local-First Finans Platformu - Offline Desteği',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -23,36 +23,75 @@ export default defineConfig(async ({ mode }) => {
         start_url: '/',
         icons: [
           {
-            src: 'icon-192x192.png',
+            src: 'icon-192x192.svg',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           },
           {
-            src: 'icon-512x512.png',
+            src: 'favicon.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Cache all static assets for offline shell
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff}'],
+        // Increase max file size to cache larger JS bundles
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // Navigate fallback - serve index.html for offline navigation
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
+          // API calls: Network First with cache fallback
+          {
+            urlPattern: /^\/api\/(?!auth).*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              },
+              networkTimeoutSeconds: 10
+            }
+          },
+          // CoinGecko API: Stale While Revalidate
           {
             urlPattern: /^https:\/\/api\.coingecko\.com\/.*/i,
-            handler: 'NetworkFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'crypto-api-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 5 // 5 minutes
+                maxAgeSeconds: 60 * 10 // 10 minutes
               },
               cacheableResponse: {
                 statuses: [0, 200]
               }
             }
           },
+          // Google Fonts: Cache First
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          // Gun P2P: Network Only
           {
             urlPattern: /^https:\/\/gun-manhattan\.herokuapp\.com\/.*/i,
             handler: 'NetworkOnly',
