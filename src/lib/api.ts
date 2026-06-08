@@ -18,10 +18,11 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
   if (!response.ok) {
     if (response.status === 401) {
       removeToken();
-      window.location.href = '/login';
+      // Don't redirect immediately — let ProtectedRoute handle it on next render.
+      // This prevents breaking background sync when token expires while offline.
     }
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || 'API Error');
+    throw new Error(error.error || `API Error ${response.status}`);
   }
 
   // Return empty object for 204 No Content

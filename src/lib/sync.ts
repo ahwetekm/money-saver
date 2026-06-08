@@ -39,6 +39,25 @@ export function listenNetworkChanges(callback: (online: boolean) => void) {
   };
 }
 
+// ─── Periodic Sync Retry ───
+let _periodicSyncInterval: ReturnType<typeof setInterval> | null = null;
+
+export function startPeriodicSync(intervalMs = 10000) {
+  if (_periodicSyncInterval) return;
+  _periodicSyncInterval = setInterval(() => {
+    if (_isOnline && !_syncInProgress) {
+      triggerBackgroundSync();
+    }
+  }, intervalMs);
+}
+
+export function stopPeriodicSync() {
+  if (_periodicSyncInterval) {
+    clearInterval(_periodicSyncInterval);
+    _periodicSyncInterval = null;
+  }
+}
+
 // ─── Sync Engine ───
 
 let _syncInProgress = false;
@@ -52,19 +71,36 @@ export async function triggerBackgroundSync() {
   _syncInProgress = true;
 
   try {
-    // Flush any pending user profile updates first
-    await flushPendingUserUpdate();
+    // Flush any pending user profile updates first (don't let it crash sync)
+    try {
+      await flushPendingUserUpdate();
+    } catch (e) {
+      console.warn('[Sync] flushPendingUserUpdate failed:', e);
+    }
 
     const queue = await getPendingSyncQueue();
+    console.log(`[Sync] Processing ${queue.length} queued items`);
+
     for (const item of queue) {
       const success = await processSyncItem(item);
       if (success) {
         await removeSyncQueueItem(item.id!);
+        console.log(`[Sync] ✅ ${item.operation} ${item.entity}/${item.payload.id || item.payload.id}`);
       } else {
-        // Stop processing if an item fails to preserve order
-        break;
+        // Refresh item from DB to get updated retryCount
+        const refreshed = await db.syncQueue.get(item.id!);
+        if (refreshed && refreshed.retryCount >= 5) {
+          console.warn(`[Sync] Dropping queue item after 5 retries:`, refreshed);
+          await removeSyncQueueItem(item.id!);
+        } else {
+          console.log(`[Sync] ⏸️ Paused at ${item.operation} ${item.entity} (retry ${refreshed?.retryCount ?? item.retryCount})`);
+          // Stop processing to preserve order, but schedule a retry
+          break;
+        }
       }
     }
+  } catch (err) {
+    console.error('[Sync] Unexpected sync error:', err);
   } finally {
     _syncInProgress = false;
   }
@@ -84,12 +120,8 @@ async function processSyncItem(item: SyncQueueItem): Promise<boolean> {
     return true;
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
+    console.error(`[Sync] ❌ Failed ${item.operation} ${item.entity}:`, errorMsg);
     await incrementRetry(item.id!, errorMsg);
-    // If retried too many times, drop it to prevent infinite loop
-    if (item.retryCount >= 4) {
-      console.warn(`[Sync] Dropping queue item after 5 retries:`, item);
-      return true; // remove from queue
-    }
     return false;
   }
 }
@@ -150,13 +182,13 @@ export async function pullAllFromRemote() {
     delayedGratifications,
     settings,
   ] = await Promise.all([
-    api.fetchTransactions().catch(() => []),
-    api.fetchBudgets().catch(() => []),
-    api.fetchPortfolio().catch(() => []),
-    api.fetchGoals().catch(() => []),
-    api.fetchSubscriptions().catch(() => []),
-    api.fetchDelayedGratifications().catch(() => []),
-    api.fetchSettings().catch(() => null),
+    api.fetchTransactions().catch((e) => { console.warn('[Sync] fetchTransactions failed:', e); return []; }),
+    api.fetchBudgets().catch((e) => { console.warn('[Sync] fetchBudgets failed:', e); return []; }),
+    api.fetchPortfolio().catch((e) => { console.warn('[Sync] fetchPortfolio failed:', e); return []; }),
+    api.fetchGoals().catch((e) => { console.warn('[Sync] fetchGoals failed:', e); return []; }),
+    api.fetchSubscriptions().catch((e) => { console.warn('[Sync] fetchSubscriptions failed:', e); return []; }),
+    api.fetchDelayedGratifications().catch((e) => { console.warn('[Sync] fetchDelayedGratifications failed:', e); return []; }),
+    api.fetchSettings().catch((e) => { console.warn('[Sync] fetchSettings failed:', e); return null; }),
   ]);
 
   const now = Date.now();
@@ -173,7 +205,7 @@ export async function pullAllFromRemote() {
     const table = entityTables.settings;
     const localSettings = await table.toArray();
     const local = localSettings[0];
-    const remoteUpdatedAt = now; // server doesn't send timestamps, treat as fresh
+    const remoteUpdatedAt = now;
     if (!local || (local.syncedAt && local.syncedAt < remoteUpdatedAt)) {
       await table.put({
         ...(local || {}),

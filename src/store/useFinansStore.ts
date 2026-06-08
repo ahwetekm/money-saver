@@ -5,7 +5,7 @@ import {
   DelayedGratification, AppSettings, CryptoPrice
 } from '../types';
 import * as offlineApi from '../lib/offlineApi';
-import { listenNetworkChanges, triggerBackgroundSync, isSyncing } from '../lib/sync';
+import { listenNetworkChanges, triggerBackgroundSync, isSyncing, startPeriodicSync } from '../lib/sync';
 import { getPendingSyncQueue } from '../lib/db';
 
 interface FinansState {
@@ -147,6 +147,9 @@ export const useFinansStore = create<FinansState>((set, get) => ({
 
       // Initial sync status
       await get()._refreshSyncStatus();
+
+      // Start periodic background sync retry (every 10s when online)
+      startPeriodicSync(10000);
 
       // Periodic sync status refresh
       setInterval(() => {
