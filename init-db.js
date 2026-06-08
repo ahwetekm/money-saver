@@ -1,8 +1,8 @@
 import { createClient } from '@libsql/client';
 
 const db = createClient({
-  url: 'libsql://<YOUR_TURSO_DATABASE_URL>',
-  authToken: '<YOUR_TURSO_AUTH_TOKEN>'
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN
 });
 
 async function init() {
