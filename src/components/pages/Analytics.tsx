@@ -165,22 +165,22 @@ export function Analytics() {
           </ResponsiveContainer>
         </SafeChart>
 
-        <div className="grid grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
           <div className="text-center p-4 rounded-xl bg-white/5">
-            <p className="text-sm text-white/50">1 Yıl Sonra</p>
-            <p className="text-lg font-bold text-cyan-400">
+            <p className="text-xs sm:text-sm text-white/50">1 Yıl Sonra</p>
+            <p className="text-sm sm:text-base md:text-lg font-bold text-cyan-400">
               {formatCurrency(projectionData[1]?.value || 0)}
             </p>
           </div>
           <div className="text-center p-4 rounded-xl bg-white/5">
-            <p className="text-sm text-white/50">3 Yıl Sonra</p>
-            <p className="text-lg font-bold text-purple-400">
+            <p className="text-xs sm:text-sm text-white/50">3 Yıl Sonra</p>
+            <p className="text-sm sm:text-base md:text-lg font-bold text-purple-400">
               {formatCurrency(projectionData[3]?.value || 0)}
             </p>
           </div>
           <div className="text-center p-4 rounded-xl bg-white/5">
-            <p className="text-sm text-white/50">5 Yıl Sonra</p>
-            <p className="text-lg font-bold text-emerald-400">
+            <p className="text-xs sm:text-sm text-white/50">5 Yıl Sonra</p>
+            <p className="text-sm sm:text-base md:text-lg font-bold text-emerald-400">
               {formatCurrency(projectionData[5]?.value || 0)}
             </p>
           </div>
