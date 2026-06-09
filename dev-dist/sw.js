@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-93f2a3fc'], (function (workbox) { 'use strict';
+define(['./workbox-970124e6'], (function (workbox) { 'use strict';
 
   self.skipWaiting();
   workbox.clientsClaim();
@@ -81,7 +81,7 @@ define(['./workbox-93f2a3fc'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.hi1jkcs5eic"
+    "revision": "0.of96ql1jbc8"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
@@ -95,10 +95,6 @@ define(['./workbox-93f2a3fc'], (function (workbox) { 'use strict';
     }), new workbox.CacheableResponsePlugin({
       statuses: [0, 200]
     })]
-  }), 'GET');
-  workbox.registerRoute(/^https:\/\/gun-manhattan\.herokuapp\.com\/.*/i, new workbox.NetworkOnly({
-    "cacheName": "gun-p2p",
-    plugins: []
   }), 'GET');
 
 }));
