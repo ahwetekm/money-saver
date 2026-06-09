@@ -5,9 +5,9 @@ import {
   removeSyncQueueItem,
   incrementRetry,
   clearSyncQueue,
-  bulkPutLocal,
   type SyncQueueItem,
   type SyncOperation,
+  type LocalRecord,
 } from './db';
 import * as api from './api';
 import { flushPendingUserUpdate } from './offlineApi';
@@ -118,15 +118,15 @@ async function processSyncItem(item: SyncQueueItem): Promise<boolean> {
       }
     }
     return true;
-  } catch (err: any) {
-    const errorMsg = err?.message || String(err);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`[Sync] ❌ Failed ${item.operation} ${item.entity}:`, errorMsg);
     await incrementRetry(item.id!, errorMsg);
     return false;
   }
 }
 
-async function executeRemoteOperation(entity: string, operation: SyncOperation, payload: any) {
+async function executeRemoteOperation(entity: string, operation: SyncOperation, payload: Record<string, unknown>) {
   switch (entity) {
     case 'transactions':
       if (operation === 'create') await api.createTransaction(payload);
@@ -218,10 +218,21 @@ export async function pullAllFromRemote() {
   }
 }
 
-async function mergeRemoteRecords(entity: string, remoteRecords: any[], now: number) {
+async function mergeRemoteRecords(entity: string, remoteRecords: LocalRecord[], now: number) {
   const table = entityTables[entity];
   if (!table) return;
 
+  const remoteIds = new Set(remoteRecords.map(r => r.id));
+
+  // Mark local records as deleted if they don't exist in remote
+  const allLocal = await table.toArray();
+  for (const local of allLocal) {
+    if (!local.isDeleted && !remoteIds.has(local.id)) {
+      await table.put({ ...local, isDeleted: true, updatedAt: now, syncedAt: now });
+    }
+  }
+
+  // Merge remote records with local
   for (const remote of remoteRecords) {
     const local = await table.get(remote.id);
     // If local has unsynced changes (updatedAt > syncedAt), keep local (LWW)

@@ -5,7 +5,7 @@ import {
   DelayedGratification, AppSettings, CryptoPrice
 } from '../types';
 import * as offlineApi from '../lib/offlineApi';
-import { listenNetworkChanges, triggerBackgroundSync, isSyncing, startPeriodicSync } from '../lib/sync';
+import { listenNetworkChanges, isSyncing, startPeriodicSync } from '../lib/sync';
 import { getPendingSyncQueue } from '../lib/db';
 
 interface FinansState {

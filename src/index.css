@@ -281,13 +281,6 @@ input[type="checkbox"]:checked::after {
   }
 }
 
-/* Extra small screens for hide labels below 360px */
-@media (max-width: 359px) {
-  .xs\\:hidden {
-    display: none;
-  }
-}
-
 /* ============================================
    120Hz TOUCH OPTIMIZATIONS
    - touch-action: manipulation → 300ms tap delay kaldırır

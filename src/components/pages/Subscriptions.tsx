@@ -1,15 +1,21 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
-import { Plus, Trash2, Calendar, Clock, Bell, X, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Trash2, Calendar, Bell, X } from 'lucide-react';
 import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge, EmptyState } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { Subscription } from '../../types';
-import { formatCurrency, formatCompactCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency } from '../../lib/utils';
 
 export function Subscriptions() {
   const { subscriptions, addSubscription, deleteSubscription } = useFinansStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const monthlyTotal = subscriptions
     .filter(s => s.interval === 'monthly')
@@ -19,13 +25,15 @@ export function Subscriptions() {
     .reduce((sum, s) => sum + s.amount / 12, 0);
   const totalMonthly = monthlyTotal + yearlyTotal;
 
-  const upcomingPayments = subscriptions
-    .map(s => ({
-      ...s,
-      daysUntil: Math.ceil((new Date(s.nextPayment).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-    }))
-    .filter(s => s.daysUntil >= 0 && s.daysUntil <= 30)
-    .sort((a, b) => a.daysUntil - b.daysUntil);
+  const upcomingPayments = useMemo(() => {
+    return subscriptions
+      .map(s => ({
+        ...s,
+        daysUntil: Math.ceil((new Date(s.nextPayment).getTime() - now) / (1000 * 60 * 60 * 24)),
+      }))
+      .filter(s => s.daysUntil >= 0 && s.daysUntil <= 30)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+  }, [subscriptions, now]);
 
   return (
     <div>
@@ -137,7 +145,10 @@ export function Subscriptions() {
 }
 
 function SubscriptionCard({ subscription, onDelete }: { subscription: Subscription; onDelete: () => void }) {
-  const daysUntil = Math.ceil((new Date(subscription.nextPayment).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const [now] = useState(() => Date.now());
+  const daysUntil = useMemo(() => {
+    return Math.ceil((new Date(subscription.nextPayment).getTime() - now) / (1000 * 60 * 60 * 24));
+  }, [subscription.nextPayment, now]);
 
   const categoryIcons: Record<string, string> = {
     'Streaming': '📺',

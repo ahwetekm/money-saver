@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, Info, LogOut, User, Lock, AlertTriangle, Trash2, CheckCircle } from 'lucide-react';
+import { Moon, Sun, Info, LogOut, User, AlertTriangle, Trash2, CheckCircle } from 'lucide-react';
 import { GlassCard, GlassInput, NeonButton } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
@@ -29,17 +29,17 @@ export function Settings() {
     setIsUpdating(true);
     setUpdateMessage({ type: '', text: '' });
     
-    try {
-      await updateUser({ 
-        email: email || undefined, 
-        password: password || undefined 
-      });
-      setUpdateMessage({ type: 'success', text: 'Hesap bilgileri güncellendi.' });
-      setEmail('');
-      setPassword('');
-      setTimeout(() => setUpdateMessage({ type: '', text: '' }), 3000);
-    } catch (error: any) {
-      setUpdateMessage({ type: 'error', text: error.message || 'Güncelleme başarısız.' });
+try {
+       await updateUser({ 
+         email: email || undefined, 
+         password: password || undefined 
+       });
+       setUpdateMessage({ type: 'success', text: 'Hesap bilgileri güncellendi.' });
+       setEmail('');
+       setPassword('');
+       setTimeout(() => setUpdateMessage({ type: '', text: '' }), 3000);
+     } catch (error: unknown) {
+       setUpdateMessage({ type: 'error', text: error instanceof Error ? error.message : 'Güncelleme başarısız.' });
     } finally {
       setIsUpdating(false);
     }
@@ -52,8 +52,8 @@ export function Settings() {
       setShowResetConfirm(false);
       setUpdateMessage({ type: 'success', text: 'Tüm verileriniz başarıyla sıfırlandı.' });
       setTimeout(() => setUpdateMessage({ type: '', text: '' }), 3000);
-    } catch (error: any) {
-      setUpdateMessage({ type: 'error', text: error.message || 'Sıfırlama başarısız.' });
+} catch (error: unknown) {
+       setUpdateMessage({ type: 'error', text: error instanceof Error ? error.message : 'Sıfırlama başarısız.' });
     } finally {
       setIsResetting(false);
     }

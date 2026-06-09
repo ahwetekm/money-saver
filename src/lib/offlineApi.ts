@@ -14,7 +14,6 @@
 
 import {
   getAllLocal,
-  getLocalById,
   putLocal,
   deleteLocal,
   clearAllLocalData,
@@ -287,7 +286,7 @@ export async function fetchSettings(): Promise<AppSettings> {
 
 export async function updateSettings(data: AppSettings) {
   const enriched = { ...data, id: 'settings', userId: 'current' };
-  await writeLocalAndQueue('settings', 'update', enriched as any);
+  await writeLocalAndQueue('settings', 'update', enriched);
 }
 
 // ─── User / Auth passthrough ───
@@ -296,7 +295,7 @@ export { getToken, setToken, removeToken } from './api';
 
 const USER_UPDATE_KEY = 'pending_user_update';
 
-export async function updateUser(data: any) {
+export async function updateUser(data: Record<string, unknown>) {
   if (isOnline()) {
     const result = await api.updateUser(data);
     localStorage.removeItem(USER_UPDATE_KEY);

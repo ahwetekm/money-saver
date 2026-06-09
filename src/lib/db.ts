@@ -16,7 +16,7 @@ export interface SyncQueueItem {
   id?: number; // auto-increment
   entity: string;
   operation: SyncOperation;
-  payload: any;
+  payload: Record<string, unknown>;
   createdAt: number;
   retryCount: number;
   lastError?: string;
@@ -67,7 +67,7 @@ class MoneySaverDB extends Dexie {
 export const db = new MoneySaverDB();
 
 // ─── Entity table map ───
-export const entityTables: Record<string, Table<any, string>> = {
+export const entityTables: Record<string, Table<LocalRecord, string>> = {
   transactions: db.transactions,
   budgets: db.budgets,
   portfolio: db.portfolio,

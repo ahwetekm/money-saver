@@ -1,16 +1,16 @@
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
-import { Calculator, TrendingUp, Target, AlertTriangle, BarChart3, PieChart as PieChartIcon, Clock } from 'lucide-react';
+import { TrendingUp, Target, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { SafeChart } from '../ui/SafeChart';
-import { GlassCard, GlassInput, Badge, ProgressBar } from '../ui/GlassCard';
+import { GlassCard, GlassInput } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
-import { formatCurrency, formatCompactCurrency, formatPercentage, calculateCompoundInterest, calculateFIRE, calculateMoodSpendingImpact } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency, calculateCompoundInterest, calculateFIRE, calculateMoodSpendingImpact } from '../../lib/utils';
 import { moodEmojis, moodColors } from '../../data/mockData';
 
 export function Analytics() {
-  const { transactions, portfolio, goals, budgets } = useFinansStore();
+  const { transactions, portfolio } = useFinansStore();
   const [projectionYears, setProjectionYears] = useState(5);
   const [monthlySaving, setMonthlySaving] = useState(5000);
   const [annualRate, setAnnualRate] = useState(15);

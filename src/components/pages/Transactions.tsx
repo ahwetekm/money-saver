@@ -74,7 +74,7 @@ export function Transactions() {
       {filteredTransactions.length > 0 ? (
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
-            {filteredTransactions.map((transaction, index) => (
+            {filteredTransactions.map((transaction) => (
               <SwipeableRow
                 key={transaction.id}
                 onDelete={() => deleteTransaction(transaction.id)}

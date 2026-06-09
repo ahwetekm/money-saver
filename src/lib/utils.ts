@@ -1,4 +1,4 @@
-import { format, parseISO, addMonths, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
 export function formatCurrency(amount: number, currency: string = 'TRY'): string {
@@ -127,10 +127,9 @@ export function generateCashFlowForecast(
 
   // Generate forecast for next N days
   for (let i = 0; i < days; i++) {
-    const date = format(addMonths(today, 0), 'yyyy-MM-dd');
     const forecastDate = format(new Date(today.getTime() + i * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
     
-    let dayIncome = 0;
+    const dayIncome = 0;
     let dayExpense = 0;
 
     // Check subscriptions

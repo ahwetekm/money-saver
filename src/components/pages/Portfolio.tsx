@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Trash2, TrendingUp, RefreshCw, Bitcoin, Building2, Coins, DollarSign } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -22,7 +22,7 @@ export function Portfolio() {
   const [activeTab, setActiveTab] = useState<'overview' | 'crypto' | 'stocks' | 'funds' | 'gold'>('overview');
   const [isLoading, setIsLoading] = useState(false);
 
-  // useCallback: fetchCryptoPrices referansı sabit kalır, gereksiz re-render önlenir
+  // Stable fetch reference for use in both effect and manual refresh
   const fetchCryptoPrices = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -45,8 +45,44 @@ export function Portfolio() {
   }, [setCryptoPrices]);
 
   useEffect(() => {
-    fetchCryptoPrices();
-  }, [fetchCryptoPrices]);
+    let cancelled = false;
+    const controller = new AbortController();
+    
+    const fetchPrices = async () => {
+      setIsLoading(true);
+      try {
+        const coinGeckoApiUrl = import.meta.env.VITE_COINGECKO_API_URL
+          || 'https://api.coingecko.com/api/v3/coins/markets';
+        const response = await fetch(
+          `${coinGeckoApiUrl}?vs_currency=try&order=market_cap_desc&per_page=20&page=1&sparkline=false`,
+          { signal: controller.signal }
+        );
+        const data = await response.json();
+        if (!cancelled) {
+          setCryptoPrices(data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to fetch crypto prices:', error);
+          setCryptoPrices([
+            { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', current_price: 2500000, price_change_percentage_24h: 2.5, image: '' },
+            { id: 'ethereum', symbol: 'eth', name: 'Ethereum', current_price: 125000, price_change_percentage_24h: -1.2, image: '' },
+            { id: 'solana', symbol: 'sol', name: 'Solana', current_price: 4500, price_change_percentage_24h: 5.3, image: '' },
+          ]);
+        }
+      }
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPrices();
+    
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [setCryptoPrices]);
 
   // useMemo: ağır hesaplamalar sadece portfolio değiştiğinde tekrar yapılır
   const computed = useMemo(() => {

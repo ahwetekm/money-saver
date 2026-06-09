@@ -1,10 +1,11 @@
-import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import type { PanInfo } from 'framer-motion';
 import { ReactNode, useState } from 'react';
 import { 
   LayoutDashboard, Wallet, TrendingUp, Target, 
-  Settings, Plus, X, TrendingDown, Bitcoin
+  Settings, Plus, TrendingDown, Bitcoin
 } from 'lucide-react';
-import { GlassCard, NeonButton, GlassInput } from '../ui/GlassCard';
+import { NeonButton, GlassInput } from '../ui/GlassCard';
 import { useFinansStore } from '../../store/useFinansStore';
 import { getCurrentDate } from '../../lib/utils';
 import { useIsMobile } from '../../lib/hooks';
@@ -126,7 +127,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
                   }`}
                 >
                   <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === item.id ? 'text-cyan-400' : ''}`} />
-                  <span className="text-[10px] sm:text-xs font-medium hidden xs:block">{item.label}</span>
+                  <span className="text-[10px] sm:text-xs font-medium max-sm:hidden">{item.label}</span>
                   {activeTab === item.id && (
                     <motion.div
                       layoutId="activeTab"
@@ -441,7 +442,7 @@ export function SwipeableRow({
   );
   const opacity = useTransform(x, [-100, -50, 0, 50, 100], [1, 0.5, 0, 0.5, 1]);
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
+  const handleDragEnd = (_event: unknown, info: PanInfo) => {
     if (info.offset.x < -80) {
       onDelete();
     } else if (info.offset.x > 80 && onEdit) {

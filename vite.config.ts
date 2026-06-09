@@ -62,10 +62,12 @@ export default defineConfig(async ({ mode }) => {
   ];
   
   try {
-    // @ts-ignore
+    // @ts-expect-error - .vite-source-tags.js may not exist
     const m = await import('./.vite-source-tags.js');
     plugins.push(m.sourceTags());
-  } catch {}
+  } catch {
+    // .vite-source-tags.js is optional
+  }
 
   const env = loadEnv(mode, process.cwd(), ['VITE_', 'NEXT_PUBLIC_']);
   const processEnvDefines: Record<string, string> = {};

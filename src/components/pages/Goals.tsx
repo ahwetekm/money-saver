@@ -1,11 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Trash2, Target, Calendar, Link, X } from 'lucide-react';
-import { GlassCard, NeonButton, GlassInput, ProgressBar, Badge, EmptyState } from '../ui/GlassCard';
+import { GlassCard, NeonButton, GlassInput, ProgressBar, EmptyState } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { Goal } from '../../types';
-import { formatCurrency, formatCompactCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency } from '../../lib/utils';
 
 const goalIcons = ['🚗', '🏠', '✈️', '💻', '📱', '💎', '🎓', '💰', '🎁', '🏖️', '🚀', '⭐'];
 
@@ -103,7 +103,10 @@ function GoalCard({ goal, onUpdate, onDelete }: {
 }) {
   const progress = (goal.currentAmount / goal.targetAmount) * 100;
   const remaining = goal.targetAmount - goal.currentAmount;
-  const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const [now] = useState(() => Date.now());
+  const daysLeft = useMemo(() => {
+    return Math.ceil((new Date(goal.deadline).getTime() - now) / (1000 * 60 * 60 * 24));
+  }, [goal.deadline, now]);
 
   return (
     <GlassCard className="p-6" hover={false}>

@@ -8,7 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis
 import { GlassCard, Badge, ProgressBar } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
-import { formatCurrency, formatCompactCurrency, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
+import { formatCompactCurrency, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
 import { categoryColors, categoryIcons } from '../../data/mockData';
 import { SafeChart } from '../ui/SafeChart';
 
