@@ -52,13 +52,6 @@ export default defineConfig(async ({ mode }) => {
                 statuses: [0, 200]
               }
             }
-          },
-          {
-            urlPattern: /^https:\/\/gun-manhattan\.herokuapp\.com\/.*/i,
-            handler: 'NetworkOnly',
-            options: {
-              cacheName: 'gun-p2p'
-            }
           }
         ]
       },

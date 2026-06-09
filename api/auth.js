@@ -5,6 +5,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+if (!JWT_SECRET) {
+  throw new Error(
+    '[CRITICAL] JWT_SECRET environment variable is not set. ' +
+    'Please create a .env file in the project root. See .env.example for reference.'
+  );
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');

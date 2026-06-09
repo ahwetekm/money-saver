@@ -1,8 +1,25 @@
 import { createClient } from '@libsql/client';
 
+// ─── Environment Variable Validation (Fail-Fast on Startup) ───
+const TURSO_DATABASE_URL = process.env.TURSO_DATABASE_URL;
+const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN;
+
+if (!TURSO_DATABASE_URL) {
+  throw new Error(
+    '[CRITICAL] TURSO_DATABASE_URL environment variable is not set. ' +
+    'Please create a .env file in the project root. See .env.example for reference.'
+  );
+}
+if (!TURSO_AUTH_TOKEN) {
+  throw new Error(
+    '[CRITICAL] TURSO_AUTH_TOKEN environment variable is not set. ' +
+    'Please create a .env file in the project root. See .env.example for reference.'
+  );
+}
+
 const db = createClient({
-  url: process.env.TURSO_DATABASE_URL,
-  authToken: process.env.TURSO_AUTH_TOKEN
+  url: TURSO_DATABASE_URL,
+  authToken: TURSO_AUTH_TOKEN
 });
 
 async function init() {

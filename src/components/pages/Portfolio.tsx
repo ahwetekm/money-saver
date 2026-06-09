@@ -26,8 +26,10 @@ export function Portfolio() {
   const fetchCryptoPrices = useCallback(async () => {
     setIsLoading(true);
     try {
+      const coinGeckoApiUrl = import.meta.env.VITE_COINGECKO_API_URL
+        || 'https://api.coingecko.com/api/v3/coins/markets';
       const response = await fetch(
-        'https://api.coingecko.com/api/v3/coins/markets?vs_currency=try&order=market_cap_desc&per_page=20&page=1&sparkline=false'
+        `${coinGeckoApiUrl}?vs_currency=try&order=market_cap_desc&per_page=20&page=1&sparkline=false`
       );
       const data = await response.json();
       setCryptoPrices(data);
