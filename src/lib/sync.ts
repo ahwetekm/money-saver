@@ -82,10 +82,10 @@ export async function triggerBackgroundSync() {
     console.log(`[Sync] Processing ${queue.length} queued items`);
 
     for (const item of queue) {
-      const success = await processSyncItem(item);
-      if (success) {
-        await removeSyncQueueItem(item.id!);
-        console.log(`[Sync] ✅ ${item.operation} ${item.entity}/${item.payload.id || item.payload.id}`);
+  const success = await processSyncItem(item);
+  if (success) {
+    await removeSyncQueueItem(item.id!);
+    console.log(`[Sync] ✅ ${item.operation} ${item.entity}/${String(item.payload.id)}`);
       } else {
         // Refresh item from DB to get updated retryCount
         const refreshed = await db.syncQueue.get(item.id!);
@@ -112,7 +112,7 @@ async function processSyncItem(item: SyncQueueItem): Promise<boolean> {
     // Mark local record as synced
     const table = entityTables[item.entity];
     if (table && item.operation !== 'delete') {
-      const record = await table.get(item.payload.id);
+      const record = await table.get(String(item.payload.id));
       if (record) {
         await table.put({ ...record, syncedAt: Date.now() });
       }
@@ -126,37 +126,39 @@ async function processSyncItem(item: SyncQueueItem): Promise<boolean> {
   }
 }
 
+const getPayloadId = (p: Record<string, unknown>): string => String(p.id);
+
 async function executeRemoteOperation(entity: string, operation: SyncOperation, payload: Record<string, unknown>) {
   switch (entity) {
     case 'transactions':
       if (operation === 'create') await api.createTransaction(payload);
       else if (operation === 'update') await api.updateTransaction(payload);
-      else if (operation === 'delete') await api.deleteTransaction(payload.id);
+      else if (operation === 'delete') await api.deleteTransaction(getPayloadId(payload));
       break;
     case 'budgets':
       if (operation === 'create') await api.createBudget(payload);
       else if (operation === 'update') await api.updateBudget(payload);
-      else if (operation === 'delete') await api.deleteBudget(payload.id);
+      else if (operation === 'delete') await api.deleteBudget(getPayloadId(payload));
       break;
     case 'portfolio':
       if (operation === 'create') await api.createPortfolioItem(payload);
       else if (operation === 'update') await api.updatePortfolioItem(payload);
-      else if (operation === 'delete') await api.deletePortfolioItem(payload.id);
+      else if (operation === 'delete') await api.deletePortfolioItem(getPayloadId(payload));
       break;
     case 'goals':
       if (operation === 'create') await api.createGoal(payload);
       else if (operation === 'update') await api.updateGoal(payload);
-      else if (operation === 'delete') await api.deleteGoal(payload.id);
+      else if (operation === 'delete') await api.deleteGoal(getPayloadId(payload));
       break;
     case 'subscriptions':
       if (operation === 'create') await api.createSubscription(payload);
       else if (operation === 'update') await api.updateSubscription(payload);
-      else if (operation === 'delete') await api.deleteSubscription(payload.id);
+      else if (operation === 'delete') await api.deleteSubscription(getPayloadId(payload));
       break;
     case 'delayedGratifications':
       if (operation === 'create') await api.createDelayedGratification(payload);
       else if (operation === 'update') await api.updateDelayedGratification(payload);
-      else if (operation === 'delete') await api.deleteDelayedGratification(payload.id);
+      else if (operation === 'delete') await api.deleteDelayedGratification(getPayloadId(payload));
       break;
     case 'settings':
       if (operation === 'create' || operation === 'update') {

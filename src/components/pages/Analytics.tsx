@@ -347,7 +347,7 @@ export function Analytics() {
         <GlassCard className="p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20">
-              <PieChartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400" />
+              <PieChart className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">Kategori Dağılımı</h3>
