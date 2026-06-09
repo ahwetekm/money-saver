@@ -8,7 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis
 import { GlassCard, Badge, ProgressBar } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
-import { formatCurrency, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
 import { categoryColors, categoryIcons } from '../../data/mockData';
 import { SafeChart } from '../ui/SafeChart';
 
@@ -100,8 +100,8 @@ export function Dashboard() {
   const statCards = [
     {
       title: 'Toplam Varlık',
-      value: formatCurrency(balance + portfolioValue),
-      change: portfolioProfit >= 0 ? `+${formatCurrency(portfolioProfit)}` : formatCurrency(portfolioProfit),
+      value: formatCompactCurrency(balance + portfolioValue),
+      change: portfolioProfit >= 0 ? `+${formatCompactCurrency(portfolioProfit)}` : formatCompactCurrency(portfolioProfit),
       changeType: portfolioProfit >= 0 ? 'positive' : 'negative',
       icon: Wallet,
       gradient: 'from-cyan-500/20 to-blue-500/20',
@@ -109,7 +109,7 @@ export function Dashboard() {
     },
     {
       title: 'Aylık Gelir',
-      value: formatCurrency(totalIncome),
+      value: formatCompactCurrency(totalIncome),
       change: '+12%',
       changeType: 'positive',
       icon: TrendingUp,
@@ -118,7 +118,7 @@ export function Dashboard() {
     },
     {
       title: 'Aylık Gider',
-      value: formatCurrency(totalExpense),
+      value: formatCompactCurrency(totalExpense),
       change: '-5%',
       changeType: 'negative',
       icon: TrendingDown,
@@ -144,7 +144,7 @@ export function Dashboard() {
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -152,51 +152,51 @@ export function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <GlassCard className="p-6" gradient={`linear-gradient(135deg, ${stat.bgGradient}, transparent)`}>
+            <GlassCard className="p-4 sm:p-6" gradient={`linear-gradient(135deg, ${stat.bgGradient}, transparent)`}>
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+                <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
+                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <Badge variant={stat.changeType === 'positive' ? 'success' : stat.changeType === 'negative' ? 'danger' : 'warning'}>
                   {stat.change}
                 </Badge>
               </div>
               <p className="text-white/50 text-sm mb-1">{stat.title}</p>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
+              <p className="text-lg sm:text-2xl font-bold text-white truncate">{stat.value}</p>
             </GlassCard>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Financial IQ Card */}
-        <GlassCard className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">Finansal IQ</h3>
-            <Zap className="w-5 h-5 text-amber-400" />
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white">Finansal IQ</h3>
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
           </div>
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center mb-4 sm:mb-6">
             <div className="relative">
-              <svg className="w-32 h-32 transform -rotate-90">
+              <svg className="w-24 h-24 sm:w-32 sm:h-32 transform -rotate-90">
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="56"
+                  cx="60"
+                  cy="60"
+                  r="52"
                   stroke="rgba(255,255,255,0.1)"
                   strokeWidth="8"
                   fill="none"
                 />
                 <motion.circle
-                  cx="64"
-                  cy="64"
-                  r="56"
+                  cx="60"
+                  cy="60"
+                  r="52"
                   stroke="url(#iqGradient)"
                   strokeWidth="8"
                   fill="none"
                   strokeLinecap="round"
-                  strokeDasharray={`${financialIQ * 3.52} 352`}
-                  initial={{ strokeDasharray: '0 352' }}
-                  animate={{ strokeDasharray: `${financialIQ * 3.52} 352` }}
+                  strokeDasharray={`${financialIQ * 3.27} 327`}
+                  initial={{ strokeDasharray: '0 327' }}
+                  animate={{ strokeDasharray: `${financialIQ * 3.27} 327` }}
                   transition={{ duration: 1, delay: 0.5 }}
                 />
                 <defs>
@@ -207,7 +207,7 @@ export function Dashboard() {
                 </defs>
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl font-bold text-white">{financialIQ}</span>
+                <span className="text-2xl sm:text-4xl font-bold text-white">{financialIQ}</span>
               </div>
             </div>
           </div>
@@ -226,8 +226,8 @@ export function Dashboard() {
         </GlassCard>
 
         {/* Expense Distribution */}
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-6">Harcama Dağılımı</h3>
+        <GlassCard className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6">Harcama Dağılımı</h3>
           {pieData.length > 0 ? (
             <SafeChart height={192}>
               <ResponsiveContainer width="100%" height="100%">
@@ -236,7 +236,7 @@ export function Dashboard() {
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
+                    innerRadius={40}
                     outerRadius={70}
                     paddingAngle={2}
                     dataKey="value"
@@ -257,15 +257,15 @@ export function Dashboard() {
             {pieData.slice(0, 4).map((item) => (
               <div key={item.name} className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-white/60">{item.name}</span>
+                <span className="text-xs text-white/60 truncate">{item.name}</span>
               </div>
             ))}
           </div>
         </GlassCard>
 
         {/* Cash Flow */}
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-6">Nakit Akışı (7 Gün)</h3>
+        <GlassCard className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6">Nakit Akışı (7 Gün)</h3>
           <SafeChart height={192}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cashFlowData}>
@@ -296,15 +296,15 @@ export function Dashboard() {
         </GlassCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Budget Alerts */}
-        <GlassCard className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">Bütçe Durumu</h3>
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white">Bütçe Durumu</h3>
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
           </div>
           {budgets.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {budgets.slice(0, 4).map((budget) => {
                 const percent = (budget.spent / budget.limit) * 100;
                 const isWarning = percent >= 80;
@@ -316,8 +316,8 @@ export function Dashboard() {
                         <span>{categoryIcons[budget.category] || '📌'}</span>
                         <span className="text-white/80">{budget.category}</span>
                       </div>
-                      <span className={`text-sm ${isDanger ? 'text-red-400' : isWarning ? 'text-amber-400' : 'text-white/60'}`}>
-                        {formatCurrency(budget.spent)} / {formatCurrency(budget.limit)}
+                      <span className={`text-xs sm:text-sm ${isDanger ? 'text-red-400' : isWarning ? 'text-amber-400' : 'text-white/60'} truncate`}>
+                        {formatCompactCurrency(budget.spent)} / {formatCompactCurrency(budget.limit)}
                       </span>
                     </div>
                     <ProgressBar 
@@ -330,29 +330,29 @@ export function Dashboard() {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-white/40">
+            <div className="text-center py-6 sm:py-8 text-white/40">
               Henüz bütçe tanımlanmadı
             </div>
           )}
         </GlassCard>
 
         {/* Goals Progress */}
-        <GlassCard className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">Hedefler</h3>
-            <Target className="w-5 h-5 text-purple-400" />
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white">Hedefler</h3>
+            <Target className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
           </div>
           {goals.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {goalsProgress.map((goal) => (
-                <div key={goal.id} className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-2xl">
+                <div key={goal.id} className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-xl sm:text-2xl">
                     {goal.icon}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-white font-medium">{goal.name}</span>
-                      <span className="text-sm text-white/60">{goal.percent.toFixed(0)}%</span>
+                      <span className="text-xs sm:text-sm text-white/60">{goal.percent.toFixed(0)}%</span>
                     </div>
                     <ProgressBar value={goal.currentAmount} max={goal.targetAmount} color="purple" />
                   </div>
@@ -360,7 +360,7 @@ export function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-white/40">
+            <div className="text-center py-6 sm:py-8 text-white/40">
               Henüz hedef belirlenmedi
             </div>
           )}
@@ -378,9 +378,9 @@ export function Dashboard() {
             className="p-4"
             gradient="linear-gradient(135deg, rgba(245,158,11,0.1), rgba(239,68,68,0.1))"
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4">
               <div className="p-2 rounded-lg bg-amber-500/20">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
               </div>
               <div>
                 <h4 className="font-semibold text-amber-400 mb-1">Portföy Dengeleme Uyarısı</h4>

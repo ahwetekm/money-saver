@@ -5,7 +5,7 @@ import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge, EmptyState } fro
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { Subscription } from '../../types';
-import { formatCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency, formatDate } from '../../lib/utils';
 
 export function Subscriptions() {
   const { subscriptions, addSubscription, deleteSubscription } = useFinansStore();
@@ -41,19 +41,19 @@ export function Subscriptions() {
       />
 
       {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <GlassCard className="p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Aylık Toplam</p>
-          <p className="text-2xl font-bold text-white">{formatCurrency(totalMonthly)}</p>
+          <p className="text-lg sm:text-2xl font-bold text-white truncate">{formatCompactCurrency(totalMonthly)}</p>
           <p className="text-xs text-white/40 mt-1">{subscriptions.length} aktif abonelik</p>
         </GlassCard>
-        <GlassCard className="p-6">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Yıllık Maliyet</p>
-          <p className="text-2xl font-bold text-amber-400">{formatCurrency(totalMonthly * 12)}</p>
+          <p className="text-lg sm:text-2xl font-bold text-amber-400 truncate">{formatCompactCurrency(totalMonthly * 12)}</p>
         </GlassCard>
-        <GlassCard className="p-6">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Yaklaşan Ödemeler</p>
-          <p className="text-2xl font-bold text-cyan-400">{upcomingPayments.length}</p>
+          <p className="text-lg sm:text-2xl font-bold text-cyan-400">{upcomingPayments.length}</p>
           <p className="text-xs text-white/40 mt-1">önümüzdeki 30 gün</p>
         </GlassCard>
       </div>

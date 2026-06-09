@@ -5,7 +5,7 @@ import { GlassCard, NeonButton, GlassInput, ProgressBar, Badge, EmptyState } fro
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { Goal } from '../../types';
-import { formatCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency, formatDate } from '../../lib/utils';
 
 const goalIcons = ['🚗', '🏠', '✈️', '💻', '📱', '💎', '🎓', '💰', '🎁', '🏖️', '🚀', '⭐'];
 
@@ -31,18 +31,18 @@ export function Goals() {
       />
 
       {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <GlassCard className="p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Toplam Hedef</p>
-          <p className="text-2xl font-bold text-white">{formatCurrency(totalGoalAmount)}</p>
+          <p className="text-lg sm:text-2xl font-bold text-white truncate">{formatCompactCurrency(totalGoalAmount)}</p>
         </GlassCard>
-        <GlassCard className="p-6">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Birikilen</p>
-          <p className="text-2xl font-bold text-emerald-400">{formatCurrency(totalSavedAmount)}</p>
+          <p className="text-lg sm:text-2xl font-bold text-emerald-400 truncate">{formatCompactCurrency(totalSavedAmount)}</p>
         </GlassCard>
-        <GlassCard className="p-6">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Genel İlerleme</p>
-          <p className="text-2xl font-bold text-cyan-400">{overallProgress.toFixed(1)}%</p>
+          <p className="text-lg sm:text-2xl font-bold text-cyan-400">{overallProgress.toFixed(1)}%</p>
           <ProgressBar value={overallProgress} max={100} className="mt-2" />
         </GlassCard>
       </div>

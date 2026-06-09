@@ -10,6 +10,18 @@ export function formatCurrency(amount: number, currency: string = 'TRY'): string
   }).format(amount);
 }
 
+export function formatCompactCurrency(amount: number): string {
+  if (amount >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    return `₺${millions.toFixed(1)}M`;
+  }
+  if (amount >= 1_000) {
+    const thousands = amount / 1_000;
+    return `₺${thousands.toFixed(2)}K`;
+  }
+  return formatCurrency(amount);
+}
+
 export function formatNumber(num: number): string {
   return new Intl.NumberFormat('tr-TR', {
     minimumFractionDigits: 2,

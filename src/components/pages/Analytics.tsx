@@ -6,7 +6,7 @@ import { SafeChart } from '../ui/SafeChart';
 import { GlassCard, GlassInput, Badge, ProgressBar } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
-import { formatCurrency, formatPercentage, calculateCompoundInterest, calculateFIRE, calculateMoodSpendingImpact } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency, formatPercentage, calculateCompoundInterest, calculateFIRE, calculateMoodSpendingImpact } from '../../lib/utils';
 import { moodEmojis, moodColors } from '../../data/mockData';
 
 export function Analytics() {
@@ -15,7 +15,6 @@ export function Analytics() {
   const [monthlySaving, setMonthlySaving] = useState(5000);
   const [annualRate, setAnnualRate] = useState(15);
 
-  // Monthly income/expense trend
   const monthlyData = useMemo(() => {
     const months: Record<string, { income: number; expense: number }> = {};
     
@@ -37,7 +36,6 @@ export function Analytics() {
       }));
   }, [transactions]);
 
-  // Projection calculation
   const projectionData = useMemo(() => {
     const currentSavings = portfolio.reduce((sum, p) => sum + p.currentPrice * p.quantity, 0);
     const data = [];
@@ -54,7 +52,6 @@ export function Analytics() {
     return data;
   }, [portfolio, projectionYears, monthlySaving, annualRate]);
 
-  // FIRE calculation
   const fireData = useMemo(() => {
     const totalSavings = portfolio.reduce((sum, p) => sum + p.currentPrice * p.quantity, 0);
     const monthlyExpenses = transactions
@@ -64,12 +61,10 @@ export function Analytics() {
     return calculateFIRE(monthlyExpenses, totalSavings);
   }, [transactions, portfolio]);
 
-  // Mood spending analysis
   const moodAnalysis = useMemo(() => {
     return calculateMoodSpendingImpact(transactions);
   }, [transactions]);
 
-  // Category breakdown
   const categoryBreakdown = useMemo(() => {
     const categories: Record<string, number> = {};
     transactions
@@ -94,18 +89,18 @@ export function Analytics() {
       />
 
       {/* Projection Calculator */}
-      <GlassCard className="p-6 mb-6">
-        <div className="flex items-center gap-3 mb-6">
+      <GlassCard className="p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 mb-4 sm:mb-6">
           <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-            <TrendingUp className="w-6 h-6 text-cyan-400" />
+            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Bileşik Faiz Projeksiyonu</h3>
-            <p className="text-sm text-white/50">Gelecekteki birikiminizi hesaplayın</p>
+            <h3 className="text-base sm:text-lg font-semibold text-white">Bileşik Faiz Projeksiyonu</h3>
+            <p className="text-xs sm:text-sm text-white/50">Gelecekteki birikiminizi hesaplayın</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
             <label className="block text-sm text-white/60 mb-2">Aylık Tasarruf (₺)</label>
             <GlassInput
@@ -165,68 +160,68 @@ export function Analytics() {
           </ResponsiveContainer>
         </SafeChart>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
           <div className="text-center p-4 rounded-xl bg-white/5">
             <p className="text-xs sm:text-sm text-white/50">1 Yıl Sonra</p>
-            <p className="text-sm sm:text-base md:text-lg font-bold text-cyan-400">
-              {formatCurrency(projectionData[1]?.value || 0)}
+            <p className="text-sm sm:text-base md:text-lg font-bold text-cyan-400 truncate">
+              {formatCompactCurrency(projectionData[1]?.value || 0)}
             </p>
           </div>
           <div className="text-center p-4 rounded-xl bg-white/5">
             <p className="text-xs sm:text-sm text-white/50">3 Yıl Sonra</p>
-            <p className="text-sm sm:text-base md:text-lg font-bold text-purple-400">
-              {formatCurrency(projectionData[3]?.value || 0)}
+            <p className="text-sm sm:text-base md:text-lg font-bold text-purple-400 truncate">
+              {formatCompactCurrency(projectionData[3]?.value || 0)}
             </p>
           </div>
           <div className="text-center p-4 rounded-xl bg-white/5">
             <p className="text-xs sm:text-sm text-white/50">5 Yıl Sonra</p>
-            <p className="text-sm sm:text-base md:text-lg font-bold text-emerald-400">
-              {formatCurrency(projectionData[5]?.value || 0)}
+            <p className="text-sm sm:text-base md:text-lg font-bold text-emerald-400 truncate">
+              {formatCompactCurrency(projectionData[5]?.value || 0)}
             </p>
           </div>
         </div>
       </GlassCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* FIRE Calculator */}
-        <GlassCard className="p-6">
-          <div className="flex items-center gap-3 mb-6">
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-              <Target className="w-6 h-6 text-amber-400" />
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">FIRE Sayacı</h3>
-              <p className="text-sm text-white/50">Mali özgürlük hedefinize ne kadar kaldı?</p>
+              <h3 className="text-base sm:text-lg font-semibold text-white">FIRE Sayacı</h3>
+              <p className="text-xs sm:text-sm text-white/50">Mali özgürlük hedefinize ne kadar kaldı?</p>
             </div>
           </div>
 
-          <div className="text-center mb-6">
-            <div className="relative w-40 h-40 mx-auto">
+          <div className="text-center mb-4 sm:mb-6">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto">
               <svg className="w-full h-full transform -rotate-90">
                 <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
+                  cx="60"
+                  cy="60"
+                  r="48"
                   stroke="rgba(255,255,255,0.1)"
                   strokeWidth="12"
                   fill="none"
                 />
                 <motion.circle
-                  cx="80"
-                  cy="80"
-                  r="70"
+                  cx="60"
+                  cy="60"
+                  r="48"
                   stroke="#f59e0b"
                   strokeWidth="12"
                   fill="none"
                   strokeLinecap="round"
-                  strokeDasharray={`${Math.min(100, fireData.progressPercent) * 4.4} 440`}
-                  initial={{ strokeDasharray: '0 440' }}
-                  animate={{ strokeDasharray: `${Math.min(100, fireData.progressPercent) * 4.4} 440` }}
+                  strokeDasharray={`${Math.min(100, fireData.progressPercent) * 3.52} 302`}
+                  initial={{ strokeDasharray: '0 302' }}
+                  animate={{ strokeDasharray: `${Math.min(100, fireData.progressPercent) * 3.52} 302` }}
                   transition={{ duration: 1 }}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-white">{fireData.progressPercent.toFixed(1)}%</span>
+                <span className="text-2xl sm:text-3xl font-bold text-white">{fireData.progressPercent.toFixed(1)}%</span>
                 <span className="text-sm text-white/50">tamamlandı</span>
               </div>
             </div>
@@ -235,11 +230,11 @@ export function Analytics() {
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 rounded-xl bg-white/5">
               <span className="text-white/60">FIRE Numarası</span>
-              <span className="font-medium text-white">{formatCurrency(fireData.fireNumber)}</span>
+              <span className="font-medium text-white truncate">{formatCompactCurrency(fireData.fireNumber)}</span>
             </div>
             <div className="flex justify-between items-center p-3 rounded-xl bg-white/5">
               <span className="text-white/60">Mevcut Birikim</span>
-              <span className="font-medium text-cyan-400">{formatCurrency(fireData.yearsCovered * 12 * fireData.fireNumber / 25)}</span>
+              <span className="font-medium text-cyan-400 truncate">{formatCompactCurrency(fireData.yearsCovered * 12 * fireData.fireNumber / 25)}</span>
             </div>
             <div className="flex justify-between items-center p-3 rounded-xl bg-white/5">
               <span className="text-white/60">Çalışmadan Geçinilebilir</span>
@@ -253,14 +248,14 @@ export function Analytics() {
         </GlassCard>
 
         {/* Mood Spending */}
-        <GlassCard className="p-6">
-          <div className="flex items-center gap-3 mb-6">
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-              <BarChart3 className="w-6 h-6 text-purple-400" />
+              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Hava Durumu Analizi</h3>
-              <p className="text-sm text-white/50">Ruh hali ve harcama ilişkisi</p>
+              <h3 className="text-base sm:text-lg font-semibold text-white">Hava Durumu Analizi</h3>
+              <p className="text-xs sm:text-sm text-white/50">Ruh hali ve harcama ilişkisi</p>
             </div>
           </div>
 
@@ -308,21 +303,21 @@ export function Analytics() {
         </GlassCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Monthly Trend */}
-        <GlassCard className="p-6">
-          <div className="flex items-center gap-3 mb-6">
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20">
-              <TrendingUp className="w-6 h-6 text-emerald-400" />
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Aylık Trend</h3>
-              <p className="text-sm text-white/50">Gelir ve gider karşılaştırması</p>
+              <h3 className="text-base sm:text-lg font-semibold text-white">Aylık Trend</h3>
+              <p className="text-xs sm:text-sm text-white/50">Gelir ve gider karşılaştırması</p>
             </div>
           </div>
 
           {monthlyData.length > 0 ? (
-            <SafeChart height={256}>
+<SafeChart height={192}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -342,21 +337,21 @@ export function Analytics() {
               </ResponsiveContainer>
             </SafeChart>
           ) : (
-            <div className="h-64 flex items-center justify-center text-white/40">
+            <div className="h-48 sm:h-64 flex items-center justify-center text-white/40">
               Henüz veri yok
             </div>
           )}
         </GlassCard>
 
         {/* Category Breakdown */}
-        <GlassCard className="p-6">
-          <div className="flex items-center gap-3 mb-6">
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20">
-              <PieChartIcon className="w-6 h-6 text-pink-400" />
+              <PieChartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Kategori Dağılımı</h3>
-              <p className="text-sm text-white/50">Harcama kategorileri</p>
+              <h3 className="text-base sm:text-lg font-semibold text-white">Kategori Dağılımı</h3>
+              <p className="text-xs sm:text-sm text-white/50">Harcama kategorileri</p>
             </div>
           </div>
 

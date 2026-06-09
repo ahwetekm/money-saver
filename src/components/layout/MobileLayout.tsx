@@ -26,11 +26,11 @@ const mobileNavItems = [
 ];
 
 /* ============================================
-   120Hz SPRING CONFIGS
-   - stiffness: 500+ → çok hızlı tepki (8ms underdamped)
-   - damping: 28-32 → minimal overshoot, snappy feel
-   - mass: 0.5 → hafif element hissi
-   ============================================ */
+    120Hz SPRING CONFIGS
+    - stiffness: 500+ → çok hızlı tepki (8ms underdamped)
+    - damping: 28-32 → minimal overshoot, snappy feel
+    - mass: 0.5 → hafif element hissi
+    ============================================ */
 const spring120 = { type: 'spring' as const, stiffness: 500, damping: 30, mass: 0.5 };
 const spring120Snappy = { type: 'spring' as const, stiffness: 600, damping: 28, mass: 0.4 };
 const spring120Sheet = { type: 'spring' as const, stiffness: 400, damping: 32, mass: 0.8 };
@@ -40,7 +40,6 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [fabType, setFabType] = useState<'income' | 'expense' | 'investment' | null>(null);
 
-  // useIsMobile hook: ResizeObserver ile daha verimli, gereksiz re-render yok
   const isMobile = useIsMobile(1024);
 
   // Mobile Layout
@@ -69,13 +68,13 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         {/* FAB - Floating Action Button */}
         <motion.button
           onClick={() => setIsFabOpen(!isFabOpen)}
-          className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+          className="fixed bottom-24 right-4 z-50 w-12 h-14 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.92 }}
           animate={{ rotate: isFabOpen ? 45 : 0 }}
           transition={spring120Snappy}
         >
-          <Plus className="w-7 h-7 text-white" />
+          <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
         </motion.button>
 
         {/* FAB Menu */}
@@ -112,7 +111,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
 
         {/* Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 right-0 z-40">
-          <div className="bg-slate-900/90 backdrop-blur-xl border-t border-white/10 px-2 py-2 safe-area-bottom">
+          <div className="bg-slate-900/90 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 sm:py-2 safe-area-bottom">
             <div className="flex justify-around items-center">
               {mobileNavItems.map((item) => (
                 <motion.button
@@ -120,18 +119,18 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
                   onClick={() => onTabChange(item.id)}
                   whileTap={{ scale: 0.88 }}
                   transition={tween120}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors duration-100 ${
+                  className={`flex flex-col items-center gap-1 px-2 sm:px-3 py-2 rounded-xl transition-colors duration-100 ${
                     activeTab === item.id
                       ? 'text-cyan-400'
                       : 'text-white/50'
                   }`}
                 >
-                  <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-cyan-400' : ''}`} />
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === item.id ? 'text-cyan-400' : ''}`} />
+                  <span className="text-[10px] sm:text-xs font-medium hidden xs:block">{item.label}</span>
                   {activeTab === item.id && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute -bottom-0 w-12 h-1 bg-cyan-400 rounded-full"
+                      className="absolute -bottom-0 w-10 h-1 bg-cyan-400 rounded-full"
                       transition={spring120}
                     />
                   )}

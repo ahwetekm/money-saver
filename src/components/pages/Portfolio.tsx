@@ -7,7 +7,7 @@ import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge } from '../ui/Gla
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { PortfolioItem, CryptoPrice } from '../../types';
-import { formatCurrency, formatPercentage, formatNumber } from '../../lib/utils';
+import { formatCurrency, formatCompactCurrency, formatPercentage, formatNumber } from '../../lib/utils';
 import { mockBISTStocks, mockFunds, mockGoldPrices } from '../../data/mockData';
 
 export function Portfolio() {
@@ -110,24 +110,24 @@ export function Portfolio() {
         }
       />
 
-      {/* Portfolio Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <GlassCard className="p-6">
+      /* Portfolio Summary */
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Toplam Değer</p>
-          <p className="text-2xl font-bold text-white">{formatCurrency(totalValue)}</p>
+          <p className="text-lg sm:text-2xl font-bold text-white truncate">{formatCompactCurrency(totalValue)}</p>
         </GlassCard>
-        <GlassCard className="p-6">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Toplam Kar/Zarar</p>
-          <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-            {totalProfit >= 0 ? '+' : ''}{formatCurrency(totalProfit)}
+          <p className={`text-lg sm:text-2xl font-bold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'} truncate`}>
+            {totalProfit >= 0 ? '+' : ''}{formatCompactCurrency(totalProfit)}
           </p>
           <p className={`text-sm ${totalProfit >= 0 ? 'text-emerald-400/60' : 'text-rose-400/60'}`}>
             {formatPercentage(profitPercent)}
           </p>
         </GlassCard>
-        <GlassCard className="p-6">
+        <GlassCard className="p-4 sm:p-6">
           <p className="text-white/50 text-sm mb-1">Varlık Sayısı</p>
-          <p className="text-2xl font-bold text-white">{portfolio.length}</p>
+          <p className="text-lg sm:text-2xl font-bold text-white">{portfolio.length}</p>
         </GlassCard>
       </div>
 
