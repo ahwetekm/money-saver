@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Trash2, TrendingUp, RefreshCw, Bitcoin, Building2, Coins, DollarSign } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, RefreshCw, Bitcoin, Building2, Coins, DollarSign, X } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { SafeChart } from '../ui/SafeChart';
-import { GlassCard, NeonButton, GlassInput, GlassSelect, Badge } from '../ui/GlassCard';
+import { GlassCard, NeonButton, GlassInput, GlassSelect } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { PortfolioItem, CryptoPrice } from '../../types';
@@ -11,7 +11,6 @@ import { formatCurrency, formatCompactCurrency, formatPercentage, formatNumber }
 import { mockBISTStocks, mockFunds, mockGoldPrices } from '../../data/mockData';
 
 export function Portfolio() {
-  // Granüler selector'lar - sadece gerekli state değiştiğinde re-render
   const portfolio = useFinansStore((s) => s.portfolio);
   const addPortfolioItem = useFinansStore((s) => s.addPortfolioItem);
   const deletePortfolioItem = useFinansStore((s) => s.deletePortfolioItem);
@@ -22,7 +21,6 @@ export function Portfolio() {
   const [activeTab, setActiveTab] = useState<'overview' | 'crypto' | 'stocks' | 'funds' | 'gold'>('overview');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Stable fetch reference for use in both effect and manual refresh
   const fetchCryptoPrices = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -84,7 +82,6 @@ export function Portfolio() {
     };
   }, [setCryptoPrices]);
 
-  // useMemo: ağır hesaplamalar sadece portfolio değiştiğinde tekrar yapılır
   const computed = useMemo(() => {
     const totalValue = portfolio.reduce((sum, item) => sum + (item.currentPrice * item.quantity), 0);
     const totalCost = portfolio.reduce((sum, item) => sum + (item.averageCost * item.quantity), 0);
@@ -106,7 +103,7 @@ export function Portfolio() {
     };
 
     const pieData = Object.entries(portfolioByType).map(([type, value]) => ({
-      name: type.charAt(0).toUpperCase() + type.slice(1),
+      name: type === 'crypto' ? 'Kripto' : type === 'stock' ? 'Hisse' : type === 'fund' ? 'Fon' : type === 'gold' ? 'Altın' : 'Döviz',
       value,
       color: typeColorMap[type] || '#6B7280',
     }));
@@ -125,7 +122,7 @@ export function Portfolio() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader 
         title="Portföy" 
         subtitle="Yatırımlarınızı takip edin"
@@ -134,52 +131,54 @@ export function Portfolio() {
             <button
               onClick={fetchCryptoPrices}
               disabled={isLoading}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5"
             >
-              <RefreshCw className={`w-5 h-5 text-white/60 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-white/60 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
             <NeonButton onClick={() => setIsModalOpen(true)}>
-              <Plus className="w-5 h-5 mr-2 inline" />
+              <Plus className="w-4 h-4 mr-1 inline shrink-0" />
               Varlık Ekle
             </NeonButton>
           </div>
         }
       />
 
-      /* Portfolio Summary */
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <GlassCard className="p-4 sm:p-6">
-          <p className="text-white/50 text-sm mb-1">Toplam Değer</p>
-          <p className="text-lg sm:text-2xl font-bold text-white truncate">{formatCompactCurrency(totalValue)}</p>
+      {/* Portfolio Summary Card (Merged stats) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <GlassCard className="p-5">
+          <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Toplam Değer</p>
+          <p className="text-2xl font-extrabold text-white tracking-tight tabular-nums">{formatCompactCurrency(totalValue)}</p>
         </GlassCard>
-        <GlassCard className="p-4 sm:p-6">
-          <p className="text-white/50 text-sm mb-1">Toplam Kar/Zarar</p>
-          <p className={`text-lg sm:text-2xl font-bold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'} truncate`}>
-            {totalProfit >= 0 ? '+' : ''}{formatCompactCurrency(totalProfit)}
-          </p>
-          <p className={`text-sm ${totalProfit >= 0 ? 'text-emerald-400/60' : 'text-rose-400/60'}`}>
-            {formatPercentage(profitPercent)}
-          </p>
+        <GlassCard className="p-5">
+          <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Toplam Kar/Zarar</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-extrabold tracking-tight tabular-nums ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {totalProfit >= 0 ? '+' : ''}{formatCompactCurrency(totalProfit)}
+            </span>
+            <span className={`text-xs font-semibold ${totalProfit >= 0 ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>
+              {formatPercentage(profitPercent)}
+            </span>
+          </div>
         </GlassCard>
-        <GlassCard className="p-4 sm:p-6">
-          <p className="text-white/50 text-sm mb-1">Varlık Sayısı</p>
-          <p className="text-lg sm:text-2xl font-bold text-white">{portfolio.length}</p>
+        <GlassCard className="p-5">
+          <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Varlık Sayısı</p>
+          <p className="text-2xl font-extrabold text-white tracking-tight tabular-nums">{portfolio.length}</p>
         </GlassCard>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      {/* Segmented Tab Control */}
+      <div className="flex gap-1 p-1 bg-slate-900 border border-white/5 rounded-xl overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
               activeTab === tab.id
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                : 'bg-white/5 text-white/60 hover:bg-white/10'
+                ? 'bg-white/5 text-[#00c2ff]'
+                : 'text-white/40 hover:text-white/80'
             }`}
           >
-            <tab.icon className="w-4 h-4" />
+            <tab.icon className="w-3.5 h-3.5" />
             {tab.label}
           </button>
         ))}
@@ -190,47 +189,53 @@ export function Portfolio() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Portfolio Distribution */}
           <GlassCard className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-6">Varlık Dağılımı</h3>
+            <h3 className="text-sm font-semibold text-white/80 tracking-tight mb-6">Varlık Dağılımı</h3>
             {pieData.length > 0 ? (
-              <>
-                <SafeChart height={256}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(15,23,42,0.9)', 
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: '8px',
-                        }} 
-                        formatter={(value) => formatCurrency(Number(value))}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </SafeChart>
-                <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="w-full sm:w-1/2">
+                  <SafeChart height={180}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={46}
+                          outerRadius={66}
+                          paddingAngle={3}
+                          dataKey="value"
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: '#0e1524', 
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            borderRadius: '12px',
+                            fontSize: '12px'
+                          }} 
+                          formatter={(value) => [`₺${Number(value).toLocaleString('tr-TR')}`, '']}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </SafeChart>
+                </div>
+                <div className="w-full sm:w-1/2 space-y-2">
                   {pieData.map((item) => (
-                    <div key={item.name} className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-sm text-white/60">{item.name}</span>
+                    <div key={item.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        <span className="text-white/50 truncate">{item.name}</span>
+                      </div>
+                      <span className="text-white/80 font-bold tabular-nums shrink-0">{formatCompactCurrency(item.value)}</span>
                     </div>
                   ))}
                 </div>
-              </>
+              </div>
             ) : (
-              <div className="h-64 flex items-center justify-center text-white/40">
+              <div className="h-44 flex items-center justify-center text-xs text-white/40">
                 Portföyünüz boş
               </div>
             )}
@@ -238,9 +243,9 @@ export function Portfolio() {
 
           {/* Holdings List */}
           <GlassCard className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Varlıklarım</h3>
+            <h3 className="text-sm font-semibold text-white/80 tracking-tight mb-4">Varlıklarım</h3>
             {portfolio.length > 0 ? (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                 {portfolio.map((item) => (
                   <PortfolioItemCard 
                     key={item.id} 
@@ -250,7 +255,7 @@ export function Portfolio() {
                 ))}
               </div>
             ) : (
-              <div className="h-64 flex items-center justify-center text-white/40">
+              <div className="h-44 flex items-center justify-center text-xs text-white/40">
                 Henüz varlık eklenmemiş
               </div>
             )}
@@ -294,32 +299,32 @@ function PortfolioItemCard({ item, onDelete }: { item: PortfolioItem; onDelete: 
   };
 
   return (
-    <div className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center text-xl">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-transparent hover:border-white/5 transition-all">
+      <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-lg shrink-0">
         {typeIcons[item.type]}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-white">{item.symbol}</span>
-          <span className="text-xs text-white/40">{item.name}</span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-xs font-semibold text-white">{item.symbol}</span>
+          <span className="text-[10px] text-white/40 truncate">{item.name}</span>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-white/60">{formatNumber(item.quantity)} adet</span>
-          <span className="text-white/40">•</span>
-          <span className="text-white/60">Maliyet: {formatCurrency(item.averageCost)}</span>
+        <div className="flex items-center gap-1.5 text-[10px] text-white/40 mt-0.5">
+          <span>{formatNumber(item.quantity)} Adet</span>
+          <span>•</span>
+          <span>Maliyet: {formatCurrency(item.averageCost)}</span>
         </div>
       </div>
-      <div className="text-right">
-        <p className="font-medium text-white">{formatCurrency(value)}</p>
-        <p className={`text-sm ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+      <div className="text-right shrink-0">
+        <p className="text-xs font-bold text-white tabular-nums">{formatCurrency(value)}</p>
+        <p className={`text-[10px] font-semibold tabular-nums mt-0.5 ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
           {profit >= 0 ? '+' : ''}{formatPercentage(profitPercent)}
         </p>
       </div>
       <button
         onClick={onDelete}
-        className="p-2 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
+        className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-3.5 h-3.5" />
       </button>
     </div>
   );
@@ -328,32 +333,32 @@ function PortfolioItemCard({ item, onDelete }: { item: PortfolioItem; onDelete: 
 function CryptoMarket({ prices, isLoading, onRefresh }: { prices: CryptoPrice[]; isLoading: boolean; onRefresh: () => void }) {
   return (
     <GlassCard className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-white">Kripto Piyasası</h3>
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-sm font-semibold text-white/80 tracking-tight">Kripto Para Fiyatları</h3>
         <button
           onClick={onRefresh}
           disabled={isLoading}
-          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+          className="p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
         >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 text-white/40 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
       </div>
       {prices.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {prices.map((crypto) => (
-            <div key={crypto.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-                <Bitcoin className="w-5 h-5 text-amber-400" />
+            <div key={crypto.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+              <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Bitcoin className="w-4 h-4 text-amber-500" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-white">{crypto.name}</span>
-                  <span className="text-xs text-white/40 uppercase">{crypto.symbol}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xs font-semibold text-white">{crypto.name}</span>
+                  <span className="text-[10px] text-white/40 uppercase tracking-wider">{crypto.symbol}</span>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-medium text-white">{formatCurrency(crypto.current_price)}</p>
-                <p className={`text-sm ${crypto.price_change_percentage_24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <div className="text-right shrink-0">
+                <p className="text-xs font-bold text-white tabular-nums">{formatCurrency(crypto.current_price)}</p>
+                <p className={`text-[10px] font-semibold tabular-nums mt-0.5 ${crypto.price_change_percentage_24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {formatPercentage(crypto.price_change_percentage_24h)}
                 </p>
               </div>
@@ -361,8 +366,8 @@ function CryptoMarket({ prices, isLoading, onRefresh }: { prices: CryptoPrice[];
           ))}
         </div>
       ) : (
-        <div className="h-48 flex items-center justify-center text-white/40">
-          {isLoading ? 'Yükleniyor...' : 'Veri bulunamadı'}
+        <div className="h-44 flex items-center justify-center text-xs text-white/40">
+          {isLoading ? 'Fiyatlar yükleniyor...' : 'Veri yüklenemedi'}
         </div>
       )}
     </GlassCard>
@@ -372,22 +377,22 @@ function CryptoMarket({ prices, isLoading, onRefresh }: { prices: CryptoPrice[];
 function BISTMarket() {
   return (
     <GlassCard className="p-6">
-      <h3 className="text-lg font-semibold text-white mb-6">BIST Hisse Senetleri</h3>
-      <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-white/80 tracking-tight mb-5">BIST Hisse Senetleri</h3>
+      <div className="space-y-1.5">
         {mockBISTStocks.map((stock) => (
-          <div key={stock.symbol} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-blue-400" />
+          <div key={stock.symbol} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+              <Building2 className="w-4 h-4 text-blue-400" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-white">{stock.symbol}</span>
-                <span className="text-xs text-white/40">{stock.name}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xs font-semibold text-white">{stock.symbol}</span>
+                <span className="text-[10px] text-white/40 truncate">{stock.name}</span>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-medium text-white">{formatCurrency(stock.price)}</p>
-              <p className={`text-sm ${stock.changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className="text-right shrink-0">
+              <p className="text-xs font-bold text-white tabular-nums">{formatCurrency(stock.price)}</p>
+              <p className={`text-[10px] font-semibold tabular-nums mt-0.5 ${stock.changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {formatPercentage(stock.changePercent)}
               </p>
             </div>
@@ -401,23 +406,22 @@ function BISTMarket() {
 function FundsMarket() {
   return (
     <GlassCard className="p-6">
-      <h3 className="text-lg font-semibold text-white mb-6">TEFAS Yatırım Fonları</h3>
-      <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-white/80 tracking-tight mb-5">Yatırım Fonları</h3>
+      <div className="space-y-1.5">
         {mockFunds.map((fund) => (
-          <div key={fund.code} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
-              <Coins className="w-5 h-5 text-emerald-400" />
+          <div key={fund.code} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <Coins className="w-4 h-4 text-emerald-400" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-white">{fund.code}</span>
-                <span className="text-xs text-white/40">{fund.name}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xs font-semibold text-white">{fund.code}</span>
+                <span className="text-[10px] text-white/40 truncate">{fund.name}</span>
               </div>
-              <Badge variant="info" className="mt-1">{fund.category}</Badge>
             </div>
-            <div className="text-right">
-              <p className="font-medium text-white">{formatNumber(fund.price)}</p>
-              <p className={`text-sm ${fund.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className="text-right shrink-0">
+              <p className="text-xs font-bold text-white tabular-nums">{formatNumber(fund.price)}</p>
+              <p className={`text-[10px] font-semibold tabular-nums mt-0.5 ${fund.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {formatPercentage(fund.change * 100)}
               </p>
             </div>
@@ -431,19 +435,19 @@ function FundsMarket() {
 function GoldMarket() {
   return (
     <GlassCard className="p-6">
-      <h3 className="text-lg font-semibold text-white mb-6">Altın Fiyatları</h3>
-      <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-white/80 tracking-tight mb-5">Altın Fiyatları</h3>
+      <div className="space-y-1.5">
         {mockGoldPrices.map((gold) => (
-          <div key={gold.type} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/20 to-amber-500/20 flex items-center justify-center text-xl">
+          <div key={gold.type} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-sm shrink-0">
               🥇
             </div>
-            <div className="flex-1">
-              <span className="font-medium text-white">{gold.name}</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-semibold text-white">{gold.name}</span>
             </div>
-            <div className="text-right">
-              <p className="font-medium text-white">{formatCurrency(gold.sell)}</p>
-              <p className={`text-sm ${gold.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className="text-right shrink-0">
+              <p className="text-xs font-bold text-white tabular-nums">{formatCurrency(gold.sell)}</p>
+              <p className={`text-[10px] font-semibold tabular-nums mt-0.5 ${gold.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {gold.change >= 0 ? '+' : ''}{formatCurrency(gold.change)}
               </p>
             </div>
@@ -495,23 +499,26 @@ function AddAssetModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-md bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl"
+        exit={{ scale: 0.96, opacity: 0 }}
+        className="w-full max-w-sm bg-slate-900 rounded-2xl border border-white/5 shadow-premium overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-white/10">
-          <h3 className="text-xl font-semibold text-white">Yeni Varlık Ekle</h3>
+        <div className="p-5 border-b border-white/5 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white">Yeni Varlık Ekle</h3>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/5 transition-colors">
+            <X className="w-4 h-4 text-white/40" />
+          </button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-5 space-y-4">
           <div>
-            <label className="block text-sm text-white/60 mb-2">Varlık Tipi</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">Varlık Tipi</label>
             <GlassSelect
               value={type}
               onChange={(v) => setType(v as PortfolioItem['type'])}
@@ -526,7 +533,7 @@ function AddAssetModal({
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-2">Sembol</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">Sembol</label>
             <GlassInput
               value={symbol}
               onChange={setSymbol}
@@ -535,7 +542,7 @@ function AddAssetModal({
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-2">İsim (Opsiyonel)</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">İsim (Opsiyonel)</label>
             <GlassInput
               value={name}
               onChange={setName}
@@ -543,9 +550,9 @@ function AddAssetModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-white/60 mb-2">Miktar</label>
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">Miktar</label>
               <GlassInput
                 type="number"
                 value={quantity}
@@ -554,7 +561,7 @@ function AddAssetModal({
               />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-2">Alış Fiyatı (₺)</label>
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">Alış Fiyatı (₺)</label>
               <GlassInput
                 type="number"
                 value={price}
@@ -565,14 +572,14 @@ function AddAssetModal({
           </div>
         </div>
 
-        <div className="p-6 border-t border-white/10 flex gap-3">
+        <div className="p-5 border-t border-white/5 flex gap-2.5">
           <button
             onClick={onClose}
-            className="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
+            className="flex-1 py-2 px-4 rounded-xl text-xs bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
           >
             İptal
           </button>
-          <NeonButton onClick={handleSubmit} className="flex-1">
+          <NeonButton onClick={handleSubmit} className="flex-1 text-xs">
             Ekle
           </NeonButton>
         </div>

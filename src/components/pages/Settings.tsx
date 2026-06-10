@@ -29,17 +29,17 @@ export function Settings() {
     setIsUpdating(true);
     setUpdateMessage({ type: '', text: '' });
     
-try {
-       await updateUser({ 
-         email: email || undefined, 
-         password: password || undefined 
-       });
-       setUpdateMessage({ type: 'success', text: 'Hesap bilgileri güncellendi.' });
-       setEmail('');
-       setPassword('');
-       setTimeout(() => setUpdateMessage({ type: '', text: '' }), 3000);
-     } catch (error: unknown) {
-       setUpdateMessage({ type: 'error', text: error instanceof Error ? error.message : 'Güncelleme başarısız.' });
+    try {
+      await updateUser({ 
+        email: email || undefined, 
+        password: password || undefined 
+      });
+      setUpdateMessage({ type: 'success', text: 'Hesap bilgileri başarıyla güncellendi.' });
+      setEmail('');
+      setPassword('');
+      setTimeout(() => setUpdateMessage({ type: '', text: '' }), 3000);
+    } catch (error: unknown) {
+      setUpdateMessage({ type: 'error', text: error instanceof Error ? error.message : 'Güncelleme başarısız.' });
     } finally {
       setIsUpdating(false);
     }
@@ -52,15 +52,15 @@ try {
       setShowResetConfirm(false);
       setUpdateMessage({ type: 'success', text: 'Tüm verileriniz başarıyla sıfırlandı.' });
       setTimeout(() => setUpdateMessage({ type: '', text: '' }), 3000);
-} catch (error: unknown) {
-       setUpdateMessage({ type: 'error', text: error instanceof Error ? error.message : 'Sıfırlama başarısız.' });
+    } catch (error: unknown) {
+      setUpdateMessage({ type: 'error', text: error instanceof Error ? error.message : 'Sıfırlama başarısız.' });
     } finally {
       setIsResetting(false);
     }
   };
 
   return (
-    <div className="pb-20">
+    <div className="space-y-6 max-w-2xl mx-auto pb-20">
       <PageHeader 
         title="Ayarlar" 
         subtitle="Uygulama tercihlerinizi yönetin"
@@ -72,45 +72,45 @@ try {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`p-4 mb-4 rounded-xl border flex items-center gap-3 \${
+            className={`p-4 rounded-xl border flex items-center gap-3 ${
               updateMessage.type === 'success' 
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                : 'bg-red-500/10 border-red-500/30 text-red-400'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                : 'bg-red-500/10 border-red-500/20 text-red-400'
             }`}
           >
-            {updateMessage.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
-            <p className="text-sm">{updateMessage.text}</p>
+            {updateMessage.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <AlertTriangle className="w-5 h-5 shrink-0" />}
+            <p className="text-xs font-medium">{updateMessage.text}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="space-y-4">
         {/* Account Details Update */}
-        <GlassCard className="p-4 lg:p-6">
+        <GlassCard className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
-              <User className="w-5 h-5 text-blue-400" />
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <User className="w-4 h-4 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-base lg:text-lg font-semibold text-white">Hesap Bilgileri</h3>
-              <p className="text-xs lg:text-sm text-white/50">E-posta ve şifrenizi güncelleyin</p>
+              <h3 className="text-sm font-semibold text-white">Hesap Bilgileri</h3>
+              <p className="text-xs text-white/40">E-posta ve şifrenizi güncelleyin</p>
             </div>
           </div>
 
           <form onSubmit={handleUpdateUser} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">
                 Yeni E-posta Adresi
               </label>
               <GlassInput
                 type="email"
                 value={email}
                 onChange={setEmail}
-                placeholder="Yeni e-posta"
+                placeholder="Yeni e-posta adresiniz"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">
                 Yeni Şifre
               </label>
               <GlassInput
@@ -122,7 +122,7 @@ try {
             </div>
             <NeonButton 
               disabled={isUpdating || (!email && !password)}
-              className="w-full justify-center"
+              className="w-full justify-center text-xs font-semibold"
             >
               {isUpdating ? 'Güncelleniyor...' : 'Bilgileri Güncelle'}
             </NeonButton>
@@ -130,52 +130,52 @@ try {
         </GlassCard>
 
         {/* Theme Settings */}
-        <GlassCard className="p-4 lg:p-6">
+        <GlassCard className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-              <Moon className="w-5 h-5 text-purple-400" />
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <Moon className="w-4 h-4 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-base lg:text-lg font-semibold text-white">Tema</h3>
-              <p className="text-xs lg:text-sm text-white/50">Uygulama görünümü</p>
+              <h3 className="text-sm font-semibold text-white">Görünüm</h3>
+              <p className="text-xs text-white/40">Arayüz renk teması</p>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2 p-1 bg-white/5 border border-white/5 rounded-xl">
             <button
               onClick={() => updateSettings({ theme: 'dark' })}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all text-sm ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
                 settings.theme === 'dark'
-                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+                  ? 'bg-white/5 text-[#00c2ff]'
+                  : 'text-white/40 hover:text-white'
               }`}
             >
-              <Moon className="w-4 h-4" />
-              Koyu
+              <Moon className="w-3.5 h-3.5" />
+              Koyu Tema
             </button>
             <button
               onClick={() => updateSettings({ theme: 'light' })}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all text-sm ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
                 settings.theme === 'light'
-                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+                  ? 'bg-white/5 text-[#00c2ff]'
+                  : 'text-white/40 hover:text-white'
               }`}
             >
-              <Sun className="w-4 h-4" />
-              Açık
+              <Sun className="w-3.5 h-3.5" />
+              Açık Tema
             </button>
           </div>
         </GlassCard>
 
         {/* Danger Zone */}
-        <GlassCard className="p-4 lg:p-6 border-red-500/20">
+        <GlassCard className="p-6 border border-rose-500/15">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+            <div className="p-2 rounded-lg bg-rose-500/10">
+              <AlertTriangle className="w-4 h-4 text-rose-400" />
             </div>
             <div>
-              <h3 className="text-base lg:text-lg font-semibold text-white">Tehlikeli Alan</h3>
-              <p className="text-xs lg:text-sm text-white/50">Hesap verilerini sıfırla</p>
+              <h3 className="text-sm font-semibold text-white">Sıfırlama Seçenekleri</h3>
+              <p className="text-xs text-white/40">Hesap verilerini sıfırla</p>
             </div>
           </div>
 
@@ -185,24 +185,24 @@ try {
               animate={{ opacity: 1, height: 'auto' }}
               className="space-y-4"
             >
-              <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                Bu işlem tüm işlemlerinizi, portföyünüzü, bütçelerinizi ve hedeflerinizi kalıcı olarak silecektir. Emin misiniz?
+              <p className="text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/15 leading-relaxed">
+                Bu işlem tüm bütçeleri, hedefleri, portföyünüzü ve geçmiş işlemleri kalıcı olarak silecektir. Bu işlem geri alınamaz.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setShowResetConfirm(false)}
-                  className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 transition-all text-sm"
+                  className="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 transition-all text-xs"
                 >
                   İptal Et
                 </button>
                 <button
                   onClick={handleResetData}
                   disabled={isResetting}
-                  className="flex-1 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                  className="flex-1 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all text-xs font-semibold flex items-center justify-center gap-1.5"
                 >
                   {isResetting ? 'Sıfırlanıyor...' : (
                     <>
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                       Evet, Sıfırla
                     </>
                   )}
@@ -212,48 +212,48 @@ try {
           ) : (
             <button
               onClick={() => setShowResetConfirm(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-all text-sm font-medium"
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-500/5 text-rose-400 border border-rose-500/15 hover:bg-rose-500/10 transition-all text-xs font-semibold"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
               Tüm Verileri Sıfırla
             </button>
           )}
         </GlassCard>
 
         {/* Log Out */}
-        <GlassCard className="p-4 lg:p-6">
+        <GlassCard className="p-6">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium"
+            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 border border-white/5 transition-all text-xs font-semibold cursor-pointer"
           >
-            <LogOut className="w-4 h-4" />
-            Çıkış Yap
+            <LogOut className="w-3.5 h-3.5" />
+            Oturumu Kapat
           </button>
         </GlassCard>
 
         {/* About */}
-        <GlassCard className="p-4 lg:p-6">
+        <GlassCard className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-              <Info className="w-5 h-5 text-amber-400" />
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Info className="w-4 h-4 text-amber-500" />
             </div>
             <div>
-              <h3 className="text-base lg:text-lg font-semibold text-white">Hakkında</h3>
+              <h3 className="text-sm font-semibold text-white">Hakkında</h3>
             </div>
           </div>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between py-2 border-b border-white/10">
-              <span className="text-white/60">Versiyon</span>
-              <span className="text-white">2.0.0</span>
+          <div className="space-y-1 text-xs">
+            <div className="flex justify-between py-2 border-b border-white/5">
+              <span className="text-white/40">Versiyon</span>
+              <span className="text-white font-medium">2.0.0</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-white/10">
-              <span className="text-white/60">Veritabanı</span>
-              <span className="text-emerald-400">Turso (Cloud)</span>
+            <div className="flex justify-between py-2 border-b border-white/5">
+              <span className="text-white/40">Veritabanı</span>
+              <span className="text-emerald-400 font-medium">Turso (Cloud)</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-white/10">
-              <span className="text-white/60">PWA</span>
-              <span className="text-emerald-400">Aktif</span>
+            <div className="flex justify-between py-2">
+              <span className="text-white/40">Çevrimdışı Desteği (PWA)</span>
+              <span className="text-emerald-400 font-medium">Aktif</span>
             </div>
           </div>
         </GlassCard>

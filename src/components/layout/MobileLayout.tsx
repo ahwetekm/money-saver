@@ -11,7 +11,6 @@ import { getCurrentDate } from '../../lib/utils';
 import { useIsMobile } from '../../lib/hooks';
 import { incomeCategories, expenseCategories, categoryIcons, moodEmojis } from '../../data/mockData';
 
-
 interface LayoutProps {
   children: ReactNode;
   activeTab: string;
@@ -26,12 +25,6 @@ const mobileNavItems = [
   { id: 'settings', label: 'Ayarlar', icon: Settings },
 ];
 
-/* ============================================
-    120Hz SPRING CONFIGS
-    - stiffness: 500+ → çok hızlı tepki (8ms underdamped)
-    - damping: 28-32 → minimal overshoot, snappy feel
-    - mass: 0.5 → hafif element hissi
-    ============================================ */
 const spring120 = { type: 'spring' as const, stiffness: 500, damping: 30, mass: 0.5 };
 const spring120Snappy = { type: 'spring' as const, stiffness: 600, damping: 28, mass: 0.4 };
 const spring120Sheet = { type: 'spring' as const, stiffness: 400, damping: 32, mass: 0.8 };
@@ -47,18 +40,14 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-slate-950 text-white pb-20">
-        {/* Animated background */}
-        <div className="fixed inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
-          <div className="absolute top-0 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
-        </div>
+        {/* Solid dark background */}
+        <div className="fixed inset-0 z-0 bg-slate-950" />
 
         {/* Main Content */}
         <main className="relative z-10 p-4">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 5 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={spring120}
           >
@@ -66,27 +55,27 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
           </motion.div>
         </main>
 
-        {/* FAB - Floating Action Button */}
+        {/* FAB - Floating Action Button (Apple HIG optimized: smaller, solid, clean shadow) */}
         <motion.button
           onClick={() => setIsFabOpen(!isFabOpen)}
-          className="fixed bottom-24 right-4 z-50 w-12 h-14 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+          className="fixed bottom-24 right-4 z-50 w-11 h-11 rounded-full bg-[#00c2ff] flex items-center justify-center shadow-premium"
           whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.92 }}
+          whileTap={{ scale: 0.95 }}
           animate={{ rotate: isFabOpen ? 45 : 0 }}
           transition={spring120Snappy}
         >
-          <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+          <Plus className="w-5 h-5 text-slate-950" />
         </motion.button>
 
         {/* FAB Menu */}
         <AnimatePresence>
           {isFabOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 12 }}
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 12 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={spring120}
-              className="fixed bottom-40 right-4 z-50 flex flex-col gap-3"
+              className="fixed bottom-36 right-4 z-50 flex flex-col gap-2.5"
             >
               <FabMenuItem
                 icon={TrendingUp}
@@ -112,31 +101,25 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
 
         {/* Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 right-0 z-40">
-          <div className="bg-slate-900/90 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 sm:py-2 safe-area-bottom">
-            <div className="flex justify-around items-center">
-              {mobileNavItems.map((item) => (
-                <motion.button
-                  key={item.id}
-                  onClick={() => onTabChange(item.id)}
-                  whileTap={{ scale: 0.88 }}
-                  transition={tween120}
-                  className={`flex flex-col items-center gap-1 px-2 sm:px-3 py-2 rounded-xl transition-colors duration-100 ${
-                    activeTab === item.id
-                      ? 'text-cyan-400'
-                      : 'text-white/50'
-                  }`}
-                >
-                  <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === item.id ? 'text-cyan-400' : ''}`} />
-                  <span className="text-[10px] sm:text-xs font-medium max-sm:hidden">{item.label}</span>
-                  {activeTab === item.id && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute -bottom-0 w-10 h-1 bg-cyan-400 rounded-full"
-                      transition={spring120}
-                    />
-                  )}
-                </motion.button>
-              ))}
+          <div className="bg-slate-900/95 border-t border-white/5 px-2 py-1 safe-area-bottom">
+            <div className="flex justify-around items-center h-12">
+              {mobileNavItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => onTabChange(item.id)}
+                    whileTap={{ scale: 0.92 }}
+                    transition={tween120}
+                    className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
+                      isActive ? 'text-[#00c2ff]' : 'text-white/40'
+                    }`}
+                  >
+                    <item.icon className="w-4.5 h-4.5" />
+                    <span className="text-[10px] font-medium tracking-tight">{item.label}</span>
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         </nav>
@@ -147,7 +130,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
             <QuickAddBottomSheet 
               type={fabType} 
               onClose={() => setFabType(null)} 
-            />
+              />
           )}
         </AnimatePresence>
 
@@ -159,7 +142,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={tween120}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/40 z-45"
               onClick={() => setIsFabOpen(false)}
             />
           )}
@@ -171,72 +154,64 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
   // Desktop Layout
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      {/* Animated background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-cyan-500/5 to-purple-500/5 rounded-full blur-3xl" />
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-          }}
-        />
-      </div>
+      {/* Solid dark background */}
+      <div className="fixed inset-0 z-0 bg-slate-950" />
 
       {/* Sidebar */}
       <motion.aside
-        initial={{ x: -280 }}
+        initial={{ x: -220 }}
         animate={{ x: 0 }}
         transition={spring120}
-        className="fixed left-0 top-0 h-full w-64 bg-slate-900/80 backdrop-blur-xl border-r border-white/10 z-40"
+        className="fixed left-0 top-0 h-full w-[220px] bg-slate-900 border-r border-white/5 z-40"
       >
         {/* Logo */}
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
-              <Wallet className="w-6 h-6 text-white" />
+        <div className="p-5 border-b border-white/5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#00c2ff] flex items-center justify-center">
+              <Wallet className="w-4.5 h-4.5 text-slate-950" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              <h1 className="text-base font-bold text-white tracking-tight">
                 Finans
               </h1>
-              <p className="text-xs text-white/50">Akıllı Yönetim</p>
+              <p className="text-[11px] text-white/40">Akıllı Yönetim</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {mobileNavItems.map((item) => (
-            <motion.button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.97 }}
-              transition={tween120}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-100 ${
-                activeTab === item.id
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30'
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
-            </motion.button>
-          ))}
+        <nav className="p-3 space-y-1">
+          {mobileNavItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => onTabChange(item.id)}
+                whileTap={{ scale: 0.98 }}
+                transition={tween120}
+                className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${
+                  isActive
+                    ? 'bg-white/5 text-[#00c2ff] font-medium'
+                    : 'text-white/50 hover:text-white hover:bg-white/[0.02]'
+                }`}
+              >
+                {isActive && (
+                  <div className="absolute left-0 top-2.5 bottom-2.5 w-1 bg-[#00c2ff] rounded-r" />
+                )}
+                <item.icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </motion.button>
+            );
+          })}
         </nav>
       </motion.aside>
 
       {/* Main content */}
-      <main className="lg:ml-64 min-h-screen relative z-10">
-        <div className="p-4 lg:p-8">
+      <main className="lg:ml-[220px] min-h-screen relative z-10">
+        <div className="p-6 lg:p-8 max-w-6xl mx-auto">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={spring120}
           >
@@ -264,13 +239,13 @@ function FabMenuItem({ icon: Icon, label, color, onClick }: {
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.92 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.96 }}
       transition={spring120Snappy}
-      className={`flex items-center gap-2 px-4 py-2 rounded-full ${colorClasses[color as keyof typeof colorClasses]} shadow-lg`}
+      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold ${colorClasses[color as keyof typeof colorClasses]} shadow-premium`}
     >
-      <Icon className="w-4 h-4" />
-      <span className="text-sm font-medium">{label}</span>
+      <Icon className="w-3.5 h-3.5" />
+      <span>{label}</span>
     </motion.button>
   );
 }
@@ -319,7 +294,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={tween120}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 bg-black/50"
       onClick={onClose}
     >
       <motion.div
@@ -327,36 +302,36 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={spring120Sheet}
-        className="absolute bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
+        className="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-3xl border-t border-white/5"
         onClick={(e) => e.stopPropagation()}
         style={{ willChange: 'transform' }}
       >
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 rounded-full bg-white/20" />
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-9 h-1 rounded-full bg-white/10" />
         </div>
 
         {/* Header */}
-        <div className="px-6 pb-4 border-b border-white/10">
-          <h3 className="text-xl font-semibold text-white">
-            {type === 'income' ? '💰 Gelir Ekle' : type === 'expense' ? '💸 Gider Ekle' : '📈 Yatırım Ekle'}
+        <div className="px-5 pb-3.5 border-b border-white/5">
+          <h3 className="text-base font-semibold text-white">
+            {type === 'income' ? 'Gelir Ekle' : type === 'expense' ? 'Gider Ekle' : 'Yatırım Ekle'}
           </h3>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto" data-scroll>
+        <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto" data-scroll>
           {type !== 'investment' && (
             <div>
-              <label className="block text-sm text-white/60 mb-2">Kategori</label>
-              <div className="flex flex-wrap gap-2">
+              <label className="block text-xs text-white/40 mb-1.5">Kategori</label>
+              <div className="flex flex-wrap gap-1.5">
                 {categories.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setCategory(cat)}
-                    className={`px-3 py-2 rounded-xl text-sm transition-colors duration-100 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-colors duration-150 ${
                       category === cat
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10'
+                        ? 'bg-[#00c2ff]/10 text-[#00c2ff] border border-[#00c2ff]/20'
+                        : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
                     }`}
                   >
                     {categoryIcons[cat]} {cat}
@@ -367,7 +342,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
           )}
 
           <div>
-            <label className="block text-sm text-white/60 mb-2">Tutar (₺)</label>
+            <label className="block text-xs text-white/40 mb-1.5">Tutar (₺)</label>
             <GlassInput
               type="number"
               value={amount}
@@ -377,7 +352,7 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-2">
+            <label className="block text-xs text-white/40 mb-1.5">
               {type === 'investment' ? 'Varlık Adı' : 'Açıklama'}
             </label>
             <GlassInput
@@ -389,14 +364,14 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
 
           {type === 'expense' && (
             <div>
-              <label className="block text-sm text-white/60 mb-2">Hava Durumu</label>
+              <label className="block text-xs text-white/40 mb-1.5">Hissiyat</label>
               <div className="flex gap-2">
                 {Object.entries(moodEmojis).map(([key, emoji]) => (
                   <button
                     key={key}
                     onClick={() => setMood(mood === key ? '' : key as 'happy' | 'stressed' | 'neutral' | 'excited' | 'sad')}
-                    className={`w-10 h-10 rounded-xl text-xl transition-colors duration-100 ${
-                      mood === key ? 'bg-white/20 border border-white/30' : 'bg-white/5'
+                    className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition-colors ${
+                      mood === key ? 'bg-white/15 border border-white/20' : 'bg-white/5 hover:bg-white/10'
                     }`}
                   >
                     {emoji}
@@ -408,14 +383,14 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
         </div>
 
         {/* Actions */}
-        <div className="p-6 border-t border-white/10 flex gap-3 safe-area-bottom">
+        <div className="p-5 border-t border-white/5 flex gap-2.5 safe-area-bottom">
           <button
             onClick={onClose}
-            className="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white/60 hover:bg-white/10 transition-colors duration-100"
+            className="flex-1 py-2.5 px-4 rounded-xl text-sm bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
           >
             İptal
           </button>
-          <NeonButton onClick={handleSubmit} className="flex-1">
+          <NeonButton onClick={handleSubmit} className="flex-1 font-semibold">
             Kaydet
           </NeonButton>
         </div>
@@ -438,7 +413,7 @@ export function SwipeableRow({
   const background = useTransform(
     x,
     [-100, -50, 0, 50, 100],
-    ['rgba(239, 68, 68, 0.3)', 'rgba(239, 68, 68, 0.2)', 'rgba(255, 255, 255, 0.05)', 'rgba(59, 130, 246, 0.2)', 'rgba(59, 130, 246, 0.3)']
+    ['rgba(239, 68, 68, 0.15)', 'rgba(239, 68, 68, 0.08)', 'rgba(255, 255, 255, 0)', 'rgba(0, 194, 255, 0.08)', 'rgba(0, 194, 255, 0.15)']
   );
   const opacity = useTransform(x, [-100, -50, 0, 50, 100], [1, 0.5, 0, 0.5, 1]);
 
@@ -461,10 +436,10 @@ export function SwipeableRow({
     >
       {/* Background actions */}
       <div className="absolute inset-0 flex items-center justify-between px-6 lg:hidden pointer-events-none">
-        <motion.div style={{ opacity }} className="text-blue-400 font-medium">
+        <motion.div style={{ opacity }} className="text-[#00c2ff] text-xs font-semibold">
           Düzenle
         </motion.div>
-        <motion.div style={{ opacity }} className="text-red-400 font-medium">
+        <motion.div style={{ opacity }} className="text-red-400 text-xs font-semibold">
           Sil
         </motion.div>
       </div>
@@ -486,12 +461,12 @@ export function PageHeader({ title, subtitle, action }: {
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div className="flex items-center justify-between gap-4 mb-8">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">{title}</h1>
-        {subtitle && <p className="text-white/50 text-sm lg:text-base">{subtitle}</p>}
+        <h1 className="text-2xl lg:text-[30px] font-bold text-white tracking-tight leading-tight">{title}</h1>
+        {subtitle && <p className="text-white/40 text-xs lg:text-sm mt-0.5">{subtitle}</p>}
       </div>
-      {action && <div className="hidden lg:block">{action}</div>}
+      {action && <div className="block">{action}</div>}
     </div>
   );
 }

@@ -18,32 +18,36 @@ export function Goals() {
   const overallProgress = totalGoalAmount > 0 ? (totalSavedAmount / totalGoalAmount) * 100 : 0;
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader 
         title="Hedefler" 
         subtitle="Finansal hedeflerinizi takip edin"
         action={
           <NeonButton onClick={() => setIsModalOpen(true)}>
-            <Plus className="w-5 h-5 mr-2 inline" />
+            <Plus className="w-4 h-4 mr-1 inline" />
             Yeni Hedef
           </NeonButton>
         }
       />
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <GlassCard className="p-4 sm:p-6">
-          <p className="text-white/50 text-sm mb-1">Toplam Hedef</p>
-          <p className="text-lg sm:text-2xl font-bold text-white truncate">{formatCompactCurrency(totalGoalAmount)}</p>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <GlassCard className="p-5">
+          <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Toplam Hedef</p>
+          <p className="text-2xl font-extrabold text-white tracking-tight tabular-nums">{formatCompactCurrency(totalGoalAmount)}</p>
         </GlassCard>
-        <GlassCard className="p-4 sm:p-6">
-          <p className="text-white/50 text-sm mb-1">Birikilen</p>
-          <p className="text-lg sm:text-2xl font-bold text-emerald-400 truncate">{formatCompactCurrency(totalSavedAmount)}</p>
+        <GlassCard className="p-5">
+          <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Biriktirilen</p>
+          <p className="text-2xl font-extrabold text-emerald-400 tracking-tight tabular-nums">{formatCompactCurrency(totalSavedAmount)}</p>
         </GlassCard>
-        <GlassCard className="p-4 sm:p-6">
-          <p className="text-white/50 text-sm mb-1">Genel İlerleme</p>
-          <p className="text-lg sm:text-2xl font-bold text-cyan-400">{overallProgress.toFixed(1)}%</p>
-          <ProgressBar value={overallProgress} max={100} className="mt-2" />
+        <GlassCard className="p-5">
+          <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Genel İlerleme</p>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-2xl font-extrabold text-[#00c2ff] tracking-tight tabular-nums">{overallProgress.toFixed(1)}%</span>
+            <div className="flex-1 max-w-[100px]">
+              <ProgressBar value={overallProgress} max={100} />
+            </div>
+          </div>
         </GlassCard>
       </div>
 
@@ -54,10 +58,10 @@ export function Goals() {
             {goals.map((goal, index) => (
               <motion.div
                 key={goal.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ delay: index * 0.05 }}
               >
                 <GoalCard 
                   goal={goal} 
@@ -71,11 +75,11 @@ export function Goals() {
       ) : (
         <EmptyState
           icon={Target}
-          title="Henüz hedef yok"
-          description="Finansal hedeflerinizi ekleyerek ilerlemenizi takip edin."
+          title="Hedef Belirlenmedi"
+          description="Gelecek hayalleriniz için bir hedef oluşturun."
           action={
             <NeonButton onClick={() => setIsModalOpen(true)}>
-              <Plus className="w-5 h-5 mr-2 inline" />
+              <Plus className="w-4 h-4 mr-1 inline" />
               Hedef Ekle
             </NeonButton>
           }
@@ -109,66 +113,68 @@ function GoalCard({ goal, onUpdate, onDelete }: {
   }, [goal.deadline, now]);
 
   return (
-    <GlassCard className="p-6" hover={false}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-3xl">
-          {goal.icon}
+    <GlassCard className="p-6 h-full flex flex-col justify-between" hover={false}>
+      <div>
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-11 h-11 rounded-xl bg-purple-500/10 flex items-center justify-center text-2xl shrink-0">
+            {goal.icon}
+          </div>
+          <button
+            onClick={onDelete}
+            className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
-        <button
-          onClick={onDelete}
-          className="p-2 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
 
-      <h3 className="text-lg font-semibold text-white mb-1">{goal.name}</h3>
-      <p className="text-sm text-white/50 mb-4">
-        <Calendar className="w-4 h-4 inline mr-1" />
-        {daysLeft > 0 ? `${daysLeft} gün kaldı` : 'Süre doldu'}
-      </p>
+        <h3 className="text-sm font-semibold text-white truncate">{goal.name}</h3>
+        <p className="text-[10px] text-white/40 flex items-center gap-1 mt-1">
+          <Calendar className="w-3.5 h-3.5" />
+          {daysLeft > 0 ? `${daysLeft} gün kaldı` : 'Süre doldu'}
+        </p>
 
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-white/60">İlerleme</span>
-          <span className="text-white font-medium">{progress.toFixed(1)}%</span>
+        <div className="mt-4 space-y-1.5">
+          <div className="flex justify-between text-[10px] font-medium text-white/50">
+            <span>Hedef Oranı</span>
+            <span className="text-white/80 tabular-nums">{progress.toFixed(1)}%</span>
+          </div>
+          <ProgressBar value={goal.currentAmount} max={goal.targetAmount} color="purple" />
         </div>
-        <ProgressBar value={goal.currentAmount} max={goal.targetAmount} color="purple" />
-      </div>
 
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-white/50">Hedef</span>
-          <span className="text-white">{formatCurrency(goal.targetAmount)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-white/50">Birikilen</span>
-          <span className="text-emerald-400">{formatCurrency(goal.currentAmount)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-white/50">Kalan</span>
-          <span className="text-amber-400">{formatCurrency(remaining)}</span>
-        </div>
-      </div>
-
-      {goal.linkedAssets.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <div className="flex items-center gap-2 text-xs text-white/40">
-            <Link className="w-3 h-3" />
-            <span>{goal.linkedAssets.length} varlık bağlandı</span>
+        <div className="space-y-1.5 text-xs mt-4 pt-4 border-t border-white/5">
+          <div className="flex justify-between">
+            <span className="text-white/40">Toplam Hedef</span>
+            <span className="text-white font-medium tabular-nums">{formatCurrency(goal.targetAmount)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-white/40">Biriktirilen</span>
+            <span className="text-emerald-400 font-medium tabular-nums">{formatCurrency(goal.currentAmount)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-white/40">Kalan Miktar</span>
+            <span className="text-amber-400 font-medium tabular-nums">{formatCurrency(remaining)}</span>
           </div>
         </div>
-      )}
 
-      {/* Quick add buttons */}
-      <div className="mt-4 flex gap-2">
+        {goal.linkedAssets.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-white/5">
+            <div className="flex items-center gap-1.5 text-[10px] text-white/40">
+              <Link className="w-3 h-3" />
+              <span>{goal.linkedAssets.length} varlık ilişkilendirildi</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Add buttons */}
+      <div className="mt-5 pt-3 border-t border-white/5 flex gap-2">
         {[1000, 5000, 10000].map((amount) => (
           <button
             key={amount}
             onClick={() => onUpdate({ currentAmount: goal.currentAmount + amount })}
-            className="flex-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-sm transition-colors"
+            className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[10px] font-semibold transition-colors"
           >
-            +{formatCurrency(amount)}
+            +{formatCompactCurrency(amount)}
           </button>
         ))}
       </div>
@@ -206,7 +212,6 @@ function GoalModal({
       linkedAssets,
     });
 
-    // Reset
     setName('');
     setTargetAmount('');
     setCurrentAmount('0');
@@ -222,35 +227,35 @@ function GoalModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-md bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto"
+        exit={{ scale: 0.96, opacity: 0 }}
+        className="w-full max-w-sm bg-slate-900 rounded-2xl border border-white/5 shadow-premium overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-slate-900/95">
-          <h3 className="text-xl font-semibold text-white">Yeni Hedef</h3>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-            <X className="w-5 h-5 text-white/60" />
+        <div className="p-5 border-b border-white/5 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white">Yeni Hedef</h3>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/5 transition-colors">
+            <X className="w-4 h-4 text-white/40" />
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto" data-scroll>
           {/* Icon Picker */}
           <div>
-            <label className="block text-sm text-white/60 mb-2">İkon</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">İkon Seçimi</label>
+            <div className="flex flex-wrap gap-1.5">
               {goalIcons.map((i) => (
                 <button
                   key={i}
                   onClick={() => setIcon(i)}
-                  className={`w-10 h-10 rounded-xl text-xl transition-all ${
+                  className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${
                     icon === i 
-                      ? 'bg-purple-500/20 border border-purple-500/30' 
+                      ? 'bg-[#00c2ff]/10 border border-[#00c2ff]/20 text-[#00c2ff]' 
                       : 'bg-white/5 hover:bg-white/10'
                   }`}
                 >
@@ -262,18 +267,18 @@ function GoalModal({
 
           {/* Name */}
           <div>
-            <label className="block text-sm text-white/60 mb-2">Hedef Adı</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">Hedef Adı</label>
             <GlassInput
               value={name}
               onChange={setName}
-              placeholder="Araba, Tatil, Ev..."
+              placeholder="Ev peşinatı, tatil, teknoloji..."
             />
           </div>
 
           {/* Amounts */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-white/60 mb-2">Hedef Tutar (₺)</label>
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">Hedef Tutar (₺)</label>
               <GlassInput
                 type="number"
                 value={targetAmount}
@@ -282,7 +287,7 @@ function GoalModal({
               />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-2">Mevcut Tutar (₺)</label>
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">Mevcut Birikim (₺)</label>
               <GlassInput
                 type="number"
                 value={currentAmount}
@@ -294,20 +299,20 @@ function GoalModal({
 
           {/* Deadline */}
           <div>
-            <label className="block text-sm text-white/60 mb-2">Hedef Tarih</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">Hedeflenen Tarih</label>
             <input
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-cyan-500/50"
+              className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/5 text-white focus:outline-none focus:border-[#00c2ff]/40"
             />
           </div>
 
           {/* Linked Assets */}
           {portfolio.length > 0 && (
             <div>
-              <label className="block text-sm text-white/60 mb-2">Bağlı Varlıklar</label>
-              <div className="flex flex-wrap gap-2">
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">İlişkili Portföy Varlıkları</label>
+              <div className="flex flex-wrap gap-1.5">
                 {portfolio.map((p) => (
                   <button
                     key={p.id}
@@ -318,10 +323,10 @@ function GoalModal({
                           : [...prev, p.id]
                       );
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
                       linkedAssets.includes(p.id)
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10'
+                        ? 'bg-[#00c2ff]/10 text-[#00c2ff] border border-[#00c2ff]/20'
+                        : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
                     }`}
                   >
                     {p.symbol}
@@ -332,14 +337,14 @@ function GoalModal({
           )}
         </div>
 
-        <div className="p-6 border-t border-white/10 flex gap-3 sticky bottom-0 bg-slate-900/95">
+        <div className="p-5 border-t border-white/5 flex gap-2.5">
           <button
             onClick={onClose}
-            className="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
+            className="flex-1 py-2 px-4 rounded-xl text-xs bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
           >
             İptal
           </button>
-          <NeonButton onClick={handleSubmit} className="flex-1">
+          <NeonButton onClick={handleSubmit} className="flex-1 text-xs">
             Kaydet
           </NeonButton>
         </div>

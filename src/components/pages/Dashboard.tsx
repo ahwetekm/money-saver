@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  TrendingUp, TrendingDown, Wallet, PiggyBank, Target, 
-  AlertTriangle, Zap
+  Target, AlertTriangle, Zap, ArrowUpRight, ArrowDownRight, Activity
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
-import { GlassCard, Badge, ProgressBar } from '../ui/GlassCard';
+import { GlassCard, ProgressBar } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
 import { formatCompactCurrency, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
@@ -13,14 +12,11 @@ import { categoryColors, categoryIcons } from '../../data/mockData';
 import { SafeChart } from '../ui/SafeChart';
 
 export function Dashboard() {
-  // Granüler selector: Her state değişikliğinde tüm component re-render olmaz
   const transactions = useFinansStore((s) => s.transactions);
   const budgets = useFinansStore((s) => s.budgets);
   const portfolio = useFinansStore((s) => s.portfolio);
   const goals = useFinansStore((s) => s.goals);
 
-  // Tüm ağır hesaplamalar useMemo ile cache'lenir
-  // Sadece dependency'ler değiştiğinde yeniden hesaplanır
   const computed = useMemo(() => {
     const currentMonth = getCurrentMonth();
     const monthTransactions = transactions.filter(t => t.date.startsWith(currentMonth));
@@ -57,14 +53,12 @@ export function Dashboard() {
       color: categoryColors[category] || '#6B7280',
     }));
 
-    // Cash flow for last 7 days
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
       return date.toISOString().split('T')[0];
     });
 
-    // Transaction lookup map for O(1) access instead of O(n) filter
     const txByDate = new Map<string, typeof transactions>();
     for (const t of transactions) {
       const existing = txByDate.get(t.date) || [];
@@ -97,295 +91,340 @@ export function Dashboard() {
     rebalanceAlert, pieData, cashFlowData, goalsProgress,
   } = computed;
 
-  const statCards = [
-    {
-      title: 'Toplam Varlık',
-      value: formatCompactCurrency(balance + portfolioValue),
-      change: portfolioProfit >= 0 ? `+${formatCompactCurrency(portfolioProfit)}` : formatCompactCurrency(portfolioProfit),
-      changeType: portfolioProfit >= 0 ? 'positive' : 'negative',
-      icon: Wallet,
-      gradient: 'from-cyan-500/20 to-blue-500/20',
-      bgGradient: 'rgba(6,182,212,0.1)',
-    },
-    {
-      title: 'Aylık Gelir',
-      value: formatCompactCurrency(totalIncome),
-      change: '+12%',
-      changeType: 'positive',
-      icon: TrendingUp,
-      gradient: 'from-emerald-500/20 to-green-500/20',
-      bgGradient: 'rgba(16,185,129,0.1)',
-    },
-    {
-      title: 'Aylık Gider',
-      value: formatCompactCurrency(totalExpense),
-      change: '-5%',
-      changeType: 'negative',
-      icon: TrendingDown,
-      gradient: 'from-rose-500/20 to-red-500/20',
-      bgGradient: 'rgba(244,63,94,0.1)',
-    },
-    {
-      title: 'Tasarruf Oranı',
-      value: `${savingsRate.toFixed(1)}%`,
-      change: savingsRate >= 20 ? 'İyi' : 'Düşük',
-      changeType: savingsRate >= 20 ? 'positive' : 'warning',
-      icon: PiggyBank,
-      gradient: 'from-purple-500/20 to-pink-500/20',
-      bgGradient: 'rgba(168,85,247,0.1)',
-    },
-  ];
+  const totalAssets = balance + portfolioValue;
+  const isProfitPositive = portfolioProfit >= 0;
+  
+  // Calculate relative change label or dynamic percentage if cost is available
+  const profitLabel = isProfitPositive 
+    ? `+${formatCompactCurrency(portfolioProfit)}` 
+    : formatCompactCurrency(portfolioProfit);
+
+  // Financial Health description
+  const healthStatus = financialIQ >= 80 
+    ? 'Çok İyi' 
+    : financialIQ >= 60 
+    ? 'İyi Seviyede' 
+    : 'Geliştirilmeli';
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader 
         title="Finansal Panel" 
-        subtitle="Tüm finansal durumunuz tek bakışta"
+        subtitle="Finansal durumunuz tek bakışta"
       />
 
-      {/* Stats Grid */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {statCards.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <GlassCard className="p-4 sm:p-6" gradient={`linear-gradient(135deg, ${stat.bgGradient}, transparent)`}>
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
-                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <Badge variant={stat.changeType === 'positive' ? 'success' : stat.changeType === 'negative' ? 'danger' : 'warning'}>
-                  {stat.change}
-                </Badge>
-              </div>
-              <p className="text-white/50 text-sm mb-1">{stat.title}</p>
-              <p className="text-lg sm:text-2xl font-bold text-white truncate">{stat.value}</p>
-            </GlassCard>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        {/* Financial IQ Card */}
-        <GlassCard className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg font-semibold text-white">Finansal IQ</h3>
-            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
-          </div>
-          <div className="flex items-center justify-center mb-4 sm:mb-6">
-            <div className="relative">
-              <svg className="w-24 h-24 sm:w-32 sm:h-32 transform -rotate-90">
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <motion.circle
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  stroke="url(#iqGradient)"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={`${financialIQ * 3.27} 327`}
-                  initial={{ strokeDasharray: '0 327' }}
-                  animate={{ strokeDasharray: `${financialIQ * 3.27} 327` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                />
-                <defs>
-                  <linearGradient id="iqGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#06b6d4" />
-                    <stop offset="100%" stopColor="#8b5cf6" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl sm:text-4xl font-bold text-white">{financialIQ}</span>
+      {/* Hero Asset Card (Apple Wallet / Copilot Money style: Merged stats) */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <GlassCard className="p-6 relative overflow-hidden bg-slate-900 border border-white/5 shadow-premium">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-1">Toplam Varlık</p>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight tabular-nums">
+                {formatCompactCurrency(totalAssets)}
+              </h2>
+              <div className="flex items-center gap-1.5 mt-2">
+                <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  isProfitPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                }`}>
+                  {isProfitPositive ? (
+                    <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                  ) : (
+                    <ArrowDownRight className="w-3 h-3 mr-0.5" />
+                  )}
+                  {profitLabel}
+                </span>
+                <span className="text-white/40 text-xs">bu ay</span>
               </div>
             </div>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-white/50">Bütçe Sadakati</span>
-              <span className="text-white">{budgetAdherence.toFixed(0)}%</span>
+            
+            {/* Embedded Sub-stats layout */}
+            <div className="grid grid-cols-3 gap-6 sm:gap-8 pt-4 sm:pt-0 border-t sm:border-t-0 sm:border-l border-white/5 sm:pl-8">
+              <div>
+                <p className="text-white/40 text-[10px] font-medium uppercase tracking-wider mb-0.5">Gelir</p>
+                <p className="text-sm font-semibold text-emerald-400 tabular-nums">{formatCompactCurrency(totalIncome)}</p>
+              </div>
+              <div>
+                <p className="text-white/40 text-[10px] font-medium uppercase tracking-wider mb-0.5">Gider</p>
+                <p className="text-sm font-semibold text-rose-400 tabular-nums">{formatCompactCurrency(totalExpense)}</p>
+              </div>
+              <div>
+                <p className="text-white/40 text-[10px] font-medium uppercase tracking-wider mb-0.5">Net Durum</p>
+                <p className={`text-sm font-semibold tabular-nums ${balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {balance >= 0 ? '+' : ''}{formatCompactCurrency(balance)}
+                </p>
+              </div>
             </div>
-            <ProgressBar value={budgetAdherence} max={100} color="cyan" />
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-white/50">Tasarruf Oranı</span>
-              <span className="text-white">{savingsRate.toFixed(0)}%</span>
-            </div>
-            <ProgressBar value={savingsRate} max={100} color="purple" />
           </div>
         </GlassCard>
+      </motion.div>
 
-        {/* Expense Distribution */}
-        <GlassCard className="p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6">Harcama Dağılımı</h3>
-          {pieData.length > 0 ? (
-            <SafeChart height={192}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </SafeChart>
-          ) : (
-            <div className="h-48 flex items-center justify-center text-white/40">
-              Henüz harcama yok
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {pieData.slice(0, 4).map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-white/60 truncate">{item.name}</span>
-              </div>
-            ))}
+      {/* Nakit Akışı (Stripe style refined area chart) */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <GlassCard className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-semibold text-white/80 tracking-tight">Nakit Akışı (7 Gün)</h3>
+            <span className="text-[11px] text-white/40 flex items-center gap-1">
+              <Activity className="w-3.5 h-3.5 text-[#00c2ff]" />
+              Günlük Gelir / Gider
+            </span>
           </div>
-        </GlassCard>
-
-        {/* Cash Flow */}
-        <GlassCard className="p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6">Nakit Akışı (7 Gün)</h3>
-          <SafeChart height={192}>
+          <SafeChart height={220}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={cashFlowData}>
+              <AreaChart data={cashFlowData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.12} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.12} />
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="date" stroke="rgba(255,255,255,0.3)" fontSize={10} />
-                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="rgba(255,255,255,0.15)" 
+                  fontSize={10} 
+                  tickLine={false}
+                  axisLine={false}
+                  dy={8}
+                />
+                <YAxis 
+                  stroke="rgba(255,255,255,0.15)" 
+                  fontSize={10} 
+                  tickLine={false}
+                  axisLine={false}
+                  dx={-4}
+                  tickFormatter={(v) => `₺${v}`}
+                />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'rgba(15,23,42,0.9)', 
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px',
+                    backgroundColor: '#0e1524', 
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: '12px',
+                    color: 'white',
+                    fontSize: '12px'
                   }} 
+                  formatter={(value) => [`₺${value}`, '']}
+                  labelFormatter={(label) => `${label} Tarihli İşlemler`}
                 />
-                <Area type="monotone" dataKey="income" stroke="#10b981" fill="url(#incomeGradient)" />
-                <Area type="monotone" dataKey="expense" stroke="#ef4444" fill="url(#expenseGradient)" />
+                <Area type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={1.5} fill="url(#incomeGradient)" />
+                <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={1.5} fill="url(#expenseGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </SafeChart>
         </GlassCard>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Budget Alerts */}
-        <GlassCard className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg font-semibold text-white">Bütçe Durumu</h3>
-            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
-          </div>
-          {budgets.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
-              {budgets.slice(0, 4).map((budget) => {
-                const percent = (budget.spent / budget.limit) * 100;
-                const isWarning = percent >= 80;
-                const isDanger = percent >= 100;
-                return (
-                  <div key={budget.id}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span>{categoryIcons[budget.category] || '📌'}</span>
-                        <span className="text-white/80">{budget.category}</span>
+      {/* Grid: Financial Health & Expense Distribution */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Finansal Sağlık (Re-styled Financial Health Card) */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <GlassCard className="p-6 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-sm font-semibold text-white/80 tracking-tight">Finansal Sağlık</h3>
+                <Zap className="w-4 h-4 text-[#00c2ff]" />
+              </div>
+              
+              <div className="flex items-end gap-4 mb-6">
+                <span className="text-5xl font-extrabold text-white tracking-tight tabular-nums">{financialIQ}</span>
+                <div className="pb-1">
+                  <p className="text-xs font-semibold text-[#00c2ff]">{healthStatus}</p>
+                  <p className="text-[11px] text-white/40">Geçen aya göre +4 puan</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/40">Bütçe Sadakati</span>
+                  <span className="text-white/80 font-medium">{budgetAdherence.toFixed(0)}%</span>
+                </div>
+                <ProgressBar value={budgetAdherence} max={100} color="cyan" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/40">Tasarruf Oranı</span>
+                  <span className="text-white/80 font-medium">{savingsRate.toFixed(0)}%</span>
+                </div>
+                <ProgressBar value={savingsRate} max={100} color="purple" />
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* Harcama Dağılımı */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <GlassCard className="p-6 h-full flex flex-col justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white/80 tracking-tight mb-4">Harcama Dağılımı</h3>
+              {pieData.length > 0 ? (
+                <div className="flex items-center justify-between gap-4">
+                  <div className="w-1/2">
+                    <SafeChart height={140}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={36}
+                            outerRadius={56}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {pieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </SafeChart>
+                  </div>
+                  <div className="w-1/2 space-y-1.5">
+                    {pieData.slice(0, 4).map((item) => (
+                      <div key={item.name} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                          <span className="text-white/50 truncate">{item.name}</span>
+                        </div>
+                        <span className="text-white/80 font-semibold tabular-nums shrink-0">{formatCompactCurrency(item.value)}</span>
                       </div>
-                      <span className={`text-xs sm:text-sm ${isDanger ? 'text-red-400' : isWarning ? 'text-amber-400' : 'text-white/60'} truncate`}>
-                        {formatCompactCurrency(budget.spent)} / {formatCompactCurrency(budget.limit)}
-                      </span>
-                    </div>
-                    <ProgressBar 
-                      value={budget.spent} 
-                      max={budget.limit} 
-                      color={isDanger ? 'red' : isWarning ? 'amber' : 'cyan'} 
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-6 sm:py-8 text-white/40">
-              Henüz bütçe tanımlanmadı
-            </div>
-          )}
-        </GlassCard>
-
-        {/* Goals Progress */}
-        <GlassCard className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg font-semibold text-white">Hedefler</h3>
-            <Target className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-          </div>
-          {goals.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
-              {goalsProgress.map((goal) => (
-                <div key={goal.id} className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-xl sm:text-2xl">
-                    {goal.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-white font-medium">{goal.name}</span>
-                      <span className="text-xs sm:text-sm text-white/60">{goal.percent.toFixed(0)}%</span>
-                    </div>
-                    <ProgressBar value={goal.currentAmount} max={goal.targetAmount} color="purple" />
+                    ))}
                   </div>
                 </div>
-              ))}
+              ) : (
+                <div className="h-32 flex items-center justify-center text-xs text-white/40">
+                  Henüz harcama yok
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-6 sm:py-8 text-white/40">
-              Henüz hedef belirlenmedi
+          </GlassCard>
+        </motion.div>
+      </div>
+
+      {/* Grid: Budget Status & Goals */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Bütçe Durumu */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <GlassCard className="p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-sm font-semibold text-white/80 tracking-tight">Bütçe Durumu</h3>
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
             </div>
-          )}
-        </GlassCard>
+            {budgets.length > 0 ? (
+              <div className="space-y-4">
+                {budgets.slice(0, 3).map((budget) => {
+                  const percent = (budget.spent / budget.limit) * 100;
+                  const isWarning = percent >= 80;
+                  const isDanger = percent >= 100;
+                  return (
+                    <div key={budget.id} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span>{categoryIcons[budget.category] || '📌'}</span>
+                          <span className="text-white/70 font-medium truncate">{budget.category}</span>
+                        </div>
+                        <span className={`font-semibold tabular-nums ${
+                          isDanger ? 'text-rose-400' : isWarning ? 'text-amber-400' : 'text-white/60'
+                        }`}>
+                          {formatCompactCurrency(budget.spent)} / {formatCompactCurrency(budget.limit)}
+                        </span>
+                      </div>
+                      <ProgressBar 
+                        value={budget.spent} 
+                        max={budget.limit} 
+                        color={isDanger ? 'red' : isWarning ? 'amber' : 'cyan'} 
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-xs text-white/40">
+                Henüz bütçe tanımlanmadı
+              </div>
+            )}
+          </GlassCard>
+        </motion.div>
+
+        {/* Hedefler */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <GlassCard className="p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-sm font-semibold text-white/80 tracking-tight">Hedefler</h3>
+              <Target className="w-4 h-4 text-purple-400" />
+            </div>
+            {goals.length > 0 ? (
+              <div className="space-y-3.5">
+                {goalsProgress.map((goal) => (
+                  <div key={goal.id} className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center text-lg shrink-0">
+                      {goal.icon}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-white/80 font-medium truncate">{goal.name}</span>
+                        <span className="text-white/40 font-semibold tabular-nums">{goal.percent.toFixed(0)}%</span>
+                      </div>
+                      <ProgressBar value={goal.currentAmount} max={goal.targetAmount} color="purple" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-xs text-white/40">
+                Henüz hedef belirlenmedi
+              </div>
+            )}
+          </GlassCard>
+        </motion.div>
       </div>
 
       {/* Rebalance Alert */}
       {rebalanceAlert && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6"
         >
           <GlassCard 
-            className="p-4"
-            gradient="linear-gradient(135deg, rgba(245,158,11,0.1), rgba(239,68,68,0.1))"
+            className="p-4 border border-rose-500/10"
+            gradient="linear-gradient(135deg, rgba(245,158,11,0.06), rgba(239,68,68,0.06))"
           >
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="p-2 rounded-lg bg-amber-500/20">
-                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+            <div className="flex items-start gap-3">
+              <div className="p-1.5 rounded-lg bg-amber-500/10">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
               </div>
               <div>
-                <h4 className="font-semibold text-amber-400 mb-1">Portföy Dengeleme Uyarısı</h4>
-                <p className="text-sm text-white/70">{rebalanceAlert.message}</p>
-                <p className="text-xs text-white/50 mt-2">
+                <h4 className="text-xs font-bold text-amber-400 mb-0.5">Portföy Dengeleme Uyarısı</h4>
+                <p className="text-xs text-white/60 leading-relaxed">{rebalanceAlert.message}</p>
+                <p className="text-[10px] text-white/40 mt-1">
                   Mevcut riskli varlık oranı: %{rebalanceAlert.riskyPercent.toFixed(1)}
                 </p>
               </div>

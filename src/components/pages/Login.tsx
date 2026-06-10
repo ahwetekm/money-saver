@@ -4,7 +4,7 @@ import { Wallet, LogIn, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { setToken } from '../../lib/api';
 import { useFinansStore } from '../../store/useFinansStore';
-import { GlassCard, NeonButton, GlassInput, GlowText } from '../ui/GlassCard';
+import { GlassCard, NeonButton, GlassInput } from '../ui/GlassCard';
 
 export function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -48,66 +48,63 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Solid dark background */}
+      <div className="absolute inset-0 z-0 bg-slate-950" />
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
         <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex justify-center"
+          transition={{ duration: 0.3 }}
+          className="inline-flex justify-center mb-6"
         >
-          <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-cyan-500/20 transform -rotate-6">
-            <Wallet className="w-10 h-10 text-white transform rotate-6" />
+          <div className="w-14 h-14 bg-[#00c2ff] rounded-2xl flex items-center justify-center shadow-premium">
+            <Wallet className="w-7 h-7 text-slate-950" />
           </div>
         </motion.div>
         
         <motion.h2 
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mt-6 text-center text-3xl font-extrabold"
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="text-2xl font-bold tracking-tight text-white"
         >
-          <GlowText>Money Saver</GlowText>
+          Money Saver
         </motion.h2>
         
         <motion.p 
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-2 text-center text-sm text-white/60"
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="mt-1 text-xs text-white/40 font-medium"
         >
           {isLogin ? 'Hesabınıza giriş yapın' : 'Yeni bir hesap oluşturun'}
         </motion.p>
       </div>
 
       <motion.div 
-        initial={{ y: 40, opacity: 0 }}
+        initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="mt-6 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
       >
-        <GlassCard className="py-8 px-4 sm:px-10" hover={false}>
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <GlassCard className="py-8 px-6 sm:px-10" hover={false}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
+              <label className="block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
                 E-posta Adresi
               </label>
               <GlassInput
                 type="email"
                 value={email}
                 onChange={setEmail}
-                placeholder="ornek@email.com"
+                placeholder="isim@adres.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
+              <label className="block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
                 Şifre
               </label>
               <GlassInput
@@ -120,55 +117,50 @@ export function Login() {
 
             {error && (
               <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 py-3 rounded-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-rose-400 text-xs text-center bg-rose-500/10 border border-rose-500/15 py-2.5 rounded-xl font-medium"
               >
                 {error}
               </motion.div>
             )}
 
-            <div>
+            <div className="pt-2">
               <NeonButton
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2"
+                className="w-full flex justify-center items-center gap-2 font-bold"
               >
                 {loading ? (
-                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-4.5 h-4.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                 ) : isLogin ? (
                   <>
-                    <LogIn className="w-5 h-5" />
+                    <LogIn className="w-4.5 h-4.5" />
                     Giriş Yap
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-5 h-5" />
-                    Kayıt Ol
+                    <UserPlus className="w-4.5 h-4.5" />
+                    Hesap Oluştur
                   </>
                 )}
               </NeonButton>
             </div>
           </form>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-slate-900/50 backdrop-blur-xl text-white/50 rounded-full border border-white/5">
-                  {isLogin ? "Hesabınız yok mu?" : "Zaten hesabınız var mı?"}
-                </span>
-              </div>
+          <div className="mt-6">
+            <div className="relative flex justify-center text-xs">
+              <span className="text-white/40">
+                {isLogin ? "Henüz hesabınız yok mu?" : "Zaten üye misiniz?"}
+              </span>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-3">
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 type="button"
-                className="w-full flex justify-center py-3 px-4 rounded-xl text-sm font-medium text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500/50 focus:ring-offset-slate-900"
+                className="w-full py-2.5 rounded-xl text-xs font-bold text-white/80 bg-white/5 hover:bg-white/10 border border-white/5 transition-all focus:outline-none cursor-pointer"
               >
-                {isLogin ? 'Yeni Hesap Oluştur' : 'Giriş Yap'}
+                {isLogin ? 'Yeni Hesap Oluştur' : 'Giriş Sayfasına Dön'}
               </button>
             </div>
           </div>

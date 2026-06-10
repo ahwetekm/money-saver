@@ -1,7 +1,6 @@
-import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { TrendingUp, Target, BarChart3 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { SafeChart } from '../ui/SafeChart';
 import { GlassCard, GlassInput } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
@@ -43,7 +42,7 @@ export function Analytics() {
     for (let year = 0; year <= projectionYears; year++) {
       const value = calculateCompoundInterest(currentSavings, monthlySaving, annualRate, year);
       data.push({
-        year: `${year}. Yıl`,
+        year: `${year} Yıl`,
         value,
         contributions: currentSavings + (monthlySaving * 12 * year),
       });
@@ -79,30 +78,30 @@ export function Analytics() {
       .map(([name, value]) => ({ name, value }));
   }, [transactions]);
 
-  const COLORS = ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
+  const COLORS = ['#00c2ff', '#8b5cf6', '#22c55e', '#f59e0b', '#ef4444', '#ec4899'];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader 
-        title="Analitik" 
+        title="Analiz" 
         subtitle="Finansal verilerinizi derinlemesine analiz edin"
       />
 
       {/* Projection Calculator */}
-      <GlassCard className="p-4 sm:p-6 mb-4 sm:mb-6">
-        <div className="flex items-center gap-3 mb-4 sm:mb-6">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
+      <GlassCard className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-lg bg-[#00c2ff]/10">
+            <TrendingUp className="w-5 h-5 text-[#00c2ff]" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold text-white">Bileşik Faiz Projeksiyonu</h3>
-            <p className="text-xs sm:text-sm text-white/50">Gelecekteki birikiminizi hesaplayın</p>
+            <h3 className="text-sm font-semibold text-white">Bileşik Faiz Projeksiyonu</h3>
+            <p className="text-xs text-white/40">Gelecekteki tahmini birikim oranları</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="block text-sm text-white/60 mb-2">Aylık Tasarruf (₺)</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">Aylık Tasarruf (₺)</label>
             <GlassInput
               type="number"
               value={monthlySaving}
@@ -110,7 +109,7 @@ export function Analytics() {
             />
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-2">Yıllık Getiri (%)</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">Yıllık Getiri (%)</label>
             <GlassInput
               type="number"
               value={annualRate}
@@ -118,7 +117,7 @@ export function Analytics() {
             />
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-2">Yıl</label>
+            <label className="block text-xs text-white/40 mb-1.5 font-medium">Vade (Yıl)</label>
             <GlassInput
               type="number"
               value={projectionYears}
@@ -127,120 +126,102 @@ export function Analytics() {
           </div>
         </div>
 
-        <SafeChart height={256}>
+        <SafeChart height={220}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={projectionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="year" stroke="rgba(255,255,255,0.4)" fontSize={12} />
-              <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} />
+            <LineChart data={projectionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <XAxis dataKey="year" stroke="rgba(255,255,255,0.15)" fontSize={10} tickLine={false} axisLine={false} />
+              <YAxis stroke="rgba(255,255,255,0.15)" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'rgba(15,23,42,0.9)', 
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
+                  backgroundColor: '#0e1524', 
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '12px'
                 }}
-                formatter={(value) => formatCurrency(Number(value))}
+                formatter={(value) => [`₺${Number(value).toLocaleString('tr-TR')}`, '']}
               />
               <Line 
                 type="monotone" 
                 dataKey="value" 
-                stroke="#06b6d4" 
-                strokeWidth={3}
-                dot={{ fill: '#06b6d4', strokeWidth: 2 }}
+                stroke="#00c2ff" 
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4 }}
               />
               <Line 
                 type="monotone" 
                 dataKey="contributions" 
                 stroke="#8b5cf6" 
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ fill: '#8b5cf6', strokeWidth: 2 }}
+                strokeWidth={1.5}
+                strokeDasharray="4 4"
+                dot={false}
+                activeDot={false}
               />
             </LineChart>
           </ResponsiveContainer>
         </SafeChart>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
-          <div className="text-center p-4 rounded-xl bg-white/5">
-            <p className="text-xs sm:text-sm text-white/50">1 Yıl Sonra</p>
-            <p className="text-sm sm:text-base md:text-lg font-bold text-cyan-400 truncate">
+        <div className="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-white/5">
+          <div className="text-center">
+            <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider mb-1">1 Yıl Sonra</p>
+            <p className="text-sm font-bold text-[#00c2ff] tabular-nums">
               {formatCompactCurrency(projectionData[1]?.value || 0)}
             </p>
           </div>
-          <div className="text-center p-4 rounded-xl bg-white/5">
-            <p className="text-xs sm:text-sm text-white/50">3 Yıl Sonra</p>
-            <p className="text-sm sm:text-base md:text-lg font-bold text-purple-400 truncate">
+          <div className="text-center">
+            <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider mb-1">3 Yıl Sonra</p>
+            <p className="text-sm font-bold text-purple-400 tabular-nums">
               {formatCompactCurrency(projectionData[3]?.value || 0)}
             </p>
           </div>
-          <div className="text-center p-4 rounded-xl bg-white/5">
-            <p className="text-xs sm:text-sm text-white/50">5 Yıl Sonra</p>
-            <p className="text-sm sm:text-base md:text-lg font-bold text-emerald-400 truncate">
+          <div className="text-center">
+            <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider mb-1">5 Yıl Sonra</p>
+            <p className="text-sm font-bold text-emerald-400 tabular-nums">
               {formatCompactCurrency(projectionData[5]?.value || 0)}
             </p>
           </div>
         </div>
       </GlassCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* FIRE Calculator */}
-        <GlassCard className="p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4 sm:mb-6">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
+        <GlassCard className="p-6 flex flex-col justify-between">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Target className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-white">FIRE Sayacı</h3>
-              <p className="text-xs sm:text-sm text-white/50">Mali özgürlük hedefinize ne kadar kaldı?</p>
+              <h3 className="text-sm font-semibold text-white">FIRE Mali Özgürlük</h3>
+              <p className="text-xs text-white/40">Hedefe yaklaşma analizi</p>
             </div>
           </div>
 
-          <div className="text-center mb-4 sm:mb-6">
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="48"
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="12"
-                  fill="none"
-                />
-                <motion.circle
-                  cx="60"
-                  cy="60"
-                  r="48"
-                  stroke="#f59e0b"
-                  strokeWidth="12"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={`${Math.min(100, fireData.progressPercent) * 3.52} 302`}
-                  initial={{ strokeDasharray: '0 302' }}
-                  animate={{ strokeDasharray: `${Math.min(100, fireData.progressPercent) * 3.52} 302` }}
-                  transition={{ duration: 1 }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl sm:text-3xl font-bold text-white">{fireData.progressPercent.toFixed(1)}%</span>
-                <span className="text-sm text-white/50">tamamlandı</span>
-              </div>
+          <div className="flex items-center gap-6 mb-6">
+            <div className="text-4xl font-extrabold text-white tracking-tight tabular-nums">
+              {fireData.progressPercent.toFixed(1)}%
+            </div>
+            <div className="text-xs text-white/40 border-l border-white/5 pl-4">
+              <span>Mali özgürlük barajının tamamlanma oranı</span>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 rounded-xl bg-white/5">
-              <span className="text-white/60">FIRE Numarası</span>
-              <span className="font-medium text-white truncate">{formatCompactCurrency(fireData.fireNumber)}</span>
+          <div className="space-y-2.5">
+            <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
+              <span className="text-white/40">FIRE Hedefi</span>
+              <span className="font-semibold text-white tabular-nums">{formatCompactCurrency(fireData.fireNumber)}</span>
             </div>
-            <div className="flex justify-between items-center p-3 rounded-xl bg-white/5">
-              <span className="text-white/60">Mevcut Birikim</span>
-              <span className="font-medium text-cyan-400 truncate">{formatCompactCurrency(fireData.yearsCovered * 12 * fireData.fireNumber / 25)}</span>
+            <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
+              <span className="text-white/40">Mevcut Toplam Varlık</span>
+              <span className="font-semibold text-[#00c2ff] tabular-nums">
+                {formatCompactCurrency(fireData.yearsCovered * 12 * fireData.fireNumber / 25)}
+              </span>
             </div>
-            <div className="flex justify-between items-center p-3 rounded-xl bg-white/5">
-              <span className="text-white/60">Çalışmadan Geçinilebilir</span>
-              <span className="font-medium text-amber-400">
+            <div className="flex justify-between items-center text-xs py-2">
+              <span className="text-white/40">Çalışmadan Geçinilebilir Süre</span>
+              <span className="font-semibold text-amber-400 tabular-nums">
                 {fireData.yearsCovered > 0 
-                  ? `${fireData.yearsCovered.toFixed(1)} yıl` 
+                  ? `${fireData.yearsCovered.toFixed(1)} Yıl` 
                   : 'Henüz değil'}
               </span>
             </div>
@@ -248,34 +229,34 @@ export function Analytics() {
         </GlassCard>
 
         {/* Mood Spending */}
-        <GlassCard className="p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4 sm:mb-6">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+        <GlassCard className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <BarChart3 className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-white">Hava Durumu Analizi</h3>
-              <p className="text-xs sm:text-sm text-white/50">Ruh hali ve harcama ilişkisi</p>
+              <h3 className="text-sm font-semibold text-white">Ruh Hali & Harcama</h3>
+              <p className="text-xs text-white/40">Duyguların harcama sıklığına etkisi</p>
             </div>
           </div>
 
           {moodAnalysis.length > 0 ? (
-            <SafeChart height={192}>
+            <SafeChart height={140}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={moodAnalysis} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis type="number" stroke="rgba(255,255,255,0.4)" fontSize={12} tickFormatter={(v) => formatCurrency(v)} />
-                  <YAxis type="category" dataKey="mood" stroke="rgba(255,255,255,0.4)" fontSize={12} 
-                    tickFormatter={(v) => moodEmojis[v] || v} width={40} />
+                <BarChart data={moodAnalysis} layout="vertical" margin={{ top: 0, right: 10, left: -25, bottom: 0 }}>
+                  <XAxis type="number" stroke="rgba(255,255,255,0.15)" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="mood" stroke="rgba(255,255,255,0.15)" fontSize={12} 
+                    tickLine={false} axisLine={false} tickFormatter={(v) => moodEmojis[v] || v} width={35} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'rgba(15,23,42,0.9)', 
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
+                      backgroundColor: '#0e1524', 
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: '12px',
+                      fontSize: '12px'
                     }}
-                    formatter={(value) => formatCurrency(Number(value))}
+                    formatter={(value) => [`₺${Number(value).toLocaleString('tr-TR')}`, '']}
                   />
-                  <Bar dataKey="totalSpent" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="totalSpent" radius={[0, 4, 4, 0]} barSize={10}>
                     {moodAnalysis.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={moodColors[entry.mood] || COLORS[index % COLORS.length]} />
                     ))}
@@ -284,18 +265,18 @@ export function Analytics() {
               </ResponsiveContainer>
             </SafeChart>
           ) : (
-            <div className="h-48 flex items-center justify-center text-white/40">
-              Henüz mood verisi yok
+            <div className="h-32 flex items-center justify-center text-xs text-white/40">
+              Henüz ruh hali harcama verisi yok
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {moodAnalysis.slice(0, 4).map((item) => (
+          <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/5">
+            {moodAnalysis.slice(0, 2).map((item) => (
               <div key={item.mood} className="flex items-center gap-2 p-2 rounded-lg bg-white/5">
                 <span className="text-xl">{moodEmojis[item.mood]}</span>
                 <div>
-                  <p className="text-sm text-white/80">{formatCurrency(item.average)}</p>
-                  <p className="text-xs text-white/40">ort. harcama</p>
+                  <p className="text-xs font-bold text-white tabular-nums">{formatCurrency(item.average)}</p>
+                  <p className="text-[10px] text-white/40">Ortalama Harcama</p>
                 </div>
               </div>
             ))}
@@ -303,100 +284,98 @@ export function Analytics() {
         </GlassCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Monthly Trend */}
-        <GlassCard className="p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4 sm:mb-6">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+        <GlassCard className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-emerald-500/10">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-white">Aylık Trend</h3>
-              <p className="text-xs sm:text-sm text-white/50">Gelir ve gider karşılaştırması</p>
+              <h3 className="text-sm font-semibold text-white">Aylık Trend</h3>
+              <p className="text-xs text-white/40">Gelir ve gider analizi</p>
             </div>
           </div>
 
           {monthlyData.length > 0 ? (
-<SafeChart height={192}>
+            <SafeChart height={180}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="month" stroke="rgba(255,255,255,0.4)" fontSize={12} />
-                  <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} />
+                <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="month" stroke="rgba(255,255,255,0.15)" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.15)" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'rgba(15,23,42,0.9)', 
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
+                      backgroundColor: '#0e1524', 
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: '12px',
+                      fontSize: '12px'
                     }}
-                    formatter={(value) => formatCurrency(Number(value))}
+                    formatter={(value) => [`₺${Number(value).toLocaleString('tr-TR')}`, '']}
                   />
-                  <Bar dataKey="gelir" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="gider" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="gelir" fill="#22c55e" radius={[3, 3, 0, 0]} barSize={8} />
+                  <Bar dataKey="gider" fill="#ef4444" radius={[3, 3, 0, 0]} barSize={8} />
                 </BarChart>
               </ResponsiveContainer>
             </SafeChart>
           ) : (
-            <div className="h-48 sm:h-64 flex items-center justify-center text-white/40">
-              Henüz veri yok
+            <div className="h-32 flex items-center justify-center text-xs text-white/40">
+              Henüz aylık analiz verisi yok
             </div>
           )}
         </GlassCard>
 
         {/* Category Breakdown */}
-        <GlassCard className="p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4 sm:mb-6">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20">
-              <PieChart className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400" />
+        <GlassCard className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-pink-500/10">
+              <Target className="w-5 h-5 text-pink-400" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-white">Kategori Dağılımı</h3>
-              <p className="text-xs sm:text-sm text-white/50">Harcama kategorileri</p>
+              <h3 className="text-sm font-semibold text-white">Kategori Dağılımı</h3>
+              <p className="text-xs text-white/40">Gider kategorileri sıralaması</p>
             </div>
           </div>
 
           {categoryBreakdown.length > 0 ? (
-            <SafeChart height={192}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {categoryBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(15,23,42,0.9)', 
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                    }}
-                    formatter={(value) => formatCurrency(Number(value))}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </SafeChart>
+            <div className="flex items-center justify-between gap-4">
+              <div className="w-1/2">
+                <SafeChart height={140}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryBreakdown}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={36}
+                        outerRadius={56}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {categoryBreakdown.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </SafeChart>
+              </div>
+              <div className="w-1/2 space-y-1.5">
+                {categoryBreakdown.slice(0, 4).map((item, index) => (
+                  <div key={item.name} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                      <span className="text-white/50 truncate">{item.name}</span>
+                    </div>
+                    <span className="text-white/85 font-semibold tabular-nums shrink-0">{formatCompactCurrency(item.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
-            <div className="h-48 flex items-center justify-center text-white/40">
-              Henüz harcama yok
+            <div className="h-32 flex items-center justify-center text-xs text-white/40">
+              Henüz harcama kaydı yok
             </div>
           )}
-
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {categoryBreakdown.map((item, index) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                <span className="text-sm text-white/60 truncate">{item.name}</span>
-              </div>
-            ))}
-          </div>
         </GlassCard>
       </div>
     </div>
