@@ -278,10 +278,10 @@ export async function fetchSettings(): Promise<AppSettings> {
       await putLocal('settings', enriched);
       return remote;
     } catch {
-      return { theme: 'dark', currency: 'TRY', gunKey: '', syncEnabled: true };
+      return { theme: 'dark', currency: 'TRY', gunKey: '', syncEnabled: true, userName: '' };
     }
   }
-  return { theme: 'dark', currency: 'TRY', gunKey: '', syncEnabled: true };
+  return { theme: 'dark', currency: 'TRY', gunKey: '', syncEnabled: true, userName: '' };
 }
 
 export async function updateSettings(data: AppSettings) {
@@ -289,9 +289,35 @@ export async function updateSettings(data: AppSettings) {
   await writeLocalAndQueue('settings', 'update', enriched);
 }
 
-// ─── User / Auth passthrough ───
+// ─── User Profile ───
+
+const USER_PROFILE_KEY = 'user_profile';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+}
 
 export { getToken, setToken, removeToken } from './api';
+
+export async function fetchUserProfile(): Promise<UserProfile | null> {
+  const cached = localStorage.getItem(USER_PROFILE_KEY);
+  if (isOnline()) {
+    try {
+      const remote = await api.fetchUser();
+      localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(remote));
+      return remote;
+    } catch {
+      return cached ? JSON.parse(cached) : null;
+    }
+  }
+  return cached ? JSON.parse(cached) : null;
+}
+
+export function setLocalUserProfile(profile: UserProfile) {
+  localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+}
 
 const USER_UPDATE_KEY = 'pending_user_update';
 

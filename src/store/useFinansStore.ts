@@ -60,6 +60,11 @@ interface FinansState {
   addDelayedGratification: (item: Omit<DelayedGratification, 'id'>) => Promise<void>;
   updateDelayedGratification: (id: string, updates: Partial<DelayedGratification>) => Promise<void>;
 
+  // User Profile
+  userName: string;
+  setUserName: (name: string) => void;
+  updateUserName: (name: string) => Promise<void>;
+
   // Settings
   updateSettings: (settings: Partial<AppSettings>) => Promise<void>;
 
@@ -78,6 +83,7 @@ const defaultSettings: AppSettings = {
   currency: 'TRY',
   gunKey: '',
   syncEnabled: true,
+  userName: '',
 };
 
 export const useFinansStore = create<FinansState>((set, get) => ({
@@ -91,6 +97,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
   cryptoPrices: [],
   isLoading: true,
   initialized: false,
+  userName: '',
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   isSyncing: false,
   pendingSyncCount: 0,
@@ -115,6 +122,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         subscriptions,
         delayedGratifications,
         settings,
+        userProfile,
       ] = await Promise.all([
         offlineApi.fetchTransactions(),
         offlineApi.fetchBudgets(),
@@ -123,6 +131,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         offlineApi.fetchSubscriptions(),
         offlineApi.fetchDelayedGratifications(),
         offlineApi.fetchSettings(),
+        offlineApi.fetchUserProfile(),
       ]);
 
       set({
@@ -133,6 +142,7 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         subscriptions: subscriptions || [],
         delayedGratifications: delayedGratifications || [],
         settings: settings || defaultSettings,
+        userName: userProfile?.name || '',
         isLoading: false,
         initialized: true,
       });
@@ -333,6 +343,19 @@ export const useFinansStore = create<FinansState>((set, get) => ({
       }));
       await get()._refreshSyncStatus();
     }
+  },
+
+  setUserName: (name) => set({ userName: name }),
+
+  updateUserName: async (name) => {
+    await offlineApi.updateUser({ name });
+    // Update local cache
+    const profile = await offlineApi.fetchUserProfile();
+    if (profile) {
+      offlineApi.setLocalUserProfile({ ...profile, name });
+    }
+    set({ userName: name });
+    await get()._refreshSyncStatus();
   },
 
   updateSettings: async (settings) => {

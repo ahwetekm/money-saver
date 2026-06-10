@@ -64,5 +64,6 @@ export const deleteDelayedGratification = (id: string) => request(`/delayed_grat
 export const fetchSettings = () => request('/settings');
 export const updateSettings = (data: unknown) => request('/settings', { method: 'PUT', body: JSON.stringify(data) });
 
+export const fetchUser = () => request('/user');
 export const updateUser = (data: unknown) => request('/user', { method: 'PUT', body: JSON.stringify(data) });
 export const resetUserData = () => request('/user', { method: 'DELETE' });

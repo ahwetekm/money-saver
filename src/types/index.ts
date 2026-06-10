@@ -130,6 +130,7 @@ export interface AppSettings {
   currency: string;
   gunKey: string;
   syncEnabled: boolean;
+  userName: string;
 }
 
 export interface MoodSpending {

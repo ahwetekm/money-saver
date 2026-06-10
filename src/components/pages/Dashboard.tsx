@@ -11,11 +11,19 @@ import { formatCompactCurrency, getCurrentMonth, calculateFinancialIQ, checkReba
 import { categoryColors, categoryIcons } from '../../data/mockData';
 import { SafeChart } from '../ui/SafeChart';
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 12) return 'Günaydın';
+  if (hour >= 12 && hour < 18) return 'Tünaydın';
+  return 'İyi Akşamlar';
+}
+
 export function Dashboard() {
   const transactions = useFinansStore((s) => s.transactions);
   const budgets = useFinansStore((s) => s.budgets);
   const portfolio = useFinansStore((s) => s.portfolio);
   const goals = useFinansStore((s) => s.goals);
+  const userName = useFinansStore((s) => s.userName);
 
   const computed = useMemo(() => {
     const currentMonth = getCurrentMonth();
@@ -109,8 +117,8 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Finansal Panel" 
-        subtitle="Finansal durumunuz tek bakışta"
+        title={`${getGreeting()}${userName ? ` ${userName}` : ''}`} 
+        subtitle="Mali pusulanız"
       />
 
       {/* Hero Asset Card (Apple Wallet / Copilot Money style: Merged stats) */}

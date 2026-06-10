@@ -7,8 +7,9 @@ import { useFinansStore } from '../../store/useFinansStore';
 import { removeToken, updateUser } from '../../lib/offlineApi';
 
 export function Settings() {
-  const { settings, updateSettings, resetData } = useFinansStore();
+  const { settings, updateSettings, resetData, userName, updateUserName } = useFinansStore();
   
+  const [name, setName] = useState(userName || '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -24,16 +25,32 @@ export function Settings() {
 
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email && !password) return;
+    if (!name && !email && !password) return;
     
     setIsUpdating(true);
     setUpdateMessage({ type: '', text: '' });
     
     try {
-      await updateUser({ 
-        email: email || undefined, 
-        password: password || undefined 
-      });
+      const updates: Record<string, unknown> = {};
+      if (name && name !== userName) {
+        updates.name = name;
+      }
+      if (email) {
+        updates.email = email;
+      }
+      if (password) {
+        updates.password = password;
+      }
+
+      if (updates.name) {
+        await updateUserName(name);
+        delete updates.name;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        await updateUser(updates);
+      }
+      
       setUpdateMessage({ type: 'success', text: 'Hesap bilgileri başarıyla güncellendi.' });
       setEmail('');
       setPassword('');
@@ -98,6 +115,17 @@ export function Settings() {
           </div>
 
           <form onSubmit={handleUpdateUser} className="space-y-4">
+            <div>
+              <label className="block text-xs text-white/40 mb-1.5 font-medium">
+                Adınız
+              </label>
+              <GlassInput
+                type="text"
+                value={name}
+                onChange={setName}
+                placeholder="Adınız soyadınız"
+              />
+            </div>
             <div>
               <label className="block text-xs text-white/40 mb-1.5 font-medium">
                 Yeni E-posta Adresi

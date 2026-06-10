@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { action, email, password } = req.body;
+  const { action, email, password, name } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
@@ -44,8 +44,8 @@ export default async function handler(req, res) {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       await db.execute({
-        sql: 'INSERT INTO users (id, email, password) VALUES (?, ?, ?)',
-        args: [id, email, hashedPassword]
+        sql: 'INSERT INTO users (id, email, password, name) VALUES (?, ?, ?, ?)',
+        args: [id, email, hashedPassword, name || '']
       });
 
       // Initialize default settings
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       });
 
       const token = jwt.sign({ userId: id }, JWT_SECRET, { expiresIn: '30d' });
-      return res.status(201).json({ token, user: { id, email } });
+      return res.status(201).json({ token, user: { id, email, name: name || '' } });
     } 
     
     if (action === 'login') {
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       }
 
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
-      return res.status(200).json({ token, user: { id: user.id, email: user.email } });
+      return res.status(200).json({ token, user: { id: user.id, email: user.email, name: user.name || '' } });
     }
 
     return res.status(400).json({ error: 'Invalid action' });

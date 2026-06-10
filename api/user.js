@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
@@ -11,8 +11,20 @@ export default async function handler(req, res) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
+    if (req.method === 'GET') {
+      const result = await db.execute({
+        sql: 'SELECT id, email, name FROM users WHERE id = ?',
+        args: [userId]
+      });
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      const user = result.rows[0];
+      return res.status(200).json({ id: user.id, email: user.email, name: user.name || '' });
+    }
+
     if (req.method === 'PUT') {
-      const { email, password } = req.body;
+      const { email, password, name } = req.body;
       
       if (email) {
         const existing = await db.execute({ 
@@ -33,6 +45,13 @@ export default async function handler(req, res) {
         await db.execute({ 
           sql: 'UPDATE users SET password = ? WHERE id = ?', 
           args: [hashedPassword, userId] 
+        });
+      }
+
+      if (name !== undefined) {
+        await db.execute({
+          sql: 'UPDATE users SET name = ? WHERE id = ?',
+          args: [name, userId]
         });
       }
       

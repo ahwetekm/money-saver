@@ -10,6 +10,7 @@ export function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export function Login() {
           action: isLogin ? 'login' : 'register',
           email,
           password,
+          name: isLogin ? undefined : name,
         }),
       });
 
@@ -91,6 +93,20 @@ export function Login() {
       >
         <GlassCard className="py-8 px-6 sm:px-10" hover={false}>
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {!isLogin && (
+              <div>
+                <label className="block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
+                  Adınız
+                </label>
+                <GlassInput
+                  type="text"
+                  value={name}
+                  onChange={setName}
+                  placeholder="Adınız soyadınız"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
                 E-posta Adresi
