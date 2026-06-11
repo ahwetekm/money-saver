@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Trash2, TrendingUp, RefreshCw, Bitcoin, Building2, Coins, DollarSign, X } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, RefreshCw, Bitcoin, Building2, Coins, DollarSign, X, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { SafeChart } from '../ui/SafeChart';
 import { GlassCard, NeonButton, GlassInput, GlassSelect } from '../ui/GlassCard';
@@ -9,6 +9,15 @@ import { useFinansStore } from '../../store/useFinansStore';
 import { PortfolioItem, CryptoPrice } from '../../types';
 import { formatCurrency, formatCompactCurrency, formatPercentage, formatNumber } from '../../lib/utils';
 import { mockBISTStocks, mockFunds, mockGoldPrices } from '../../data/mockData';
+
+interface SelectableAsset {
+  id: string;
+  symbol: string;
+  name: string;
+  type: PortfolioItem['type'];
+  currentPrice: number;
+  category?: string;
+}
 
 export function Portfolio() {
   const portfolio = useFinansStore((s) => s.portfolio);
@@ -275,10 +284,11 @@ export function Portfolio() {
       <AddAssetModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
-        onSubmit={(data) => {
-          addPortfolioItem(data);
+        onSubmit={(data, investedAmount) => {
+          addPortfolioItem(data, investedAmount);
           setIsModalOpen(false);
         }}
+        cryptoPrices={cryptoPrices}
       />
     </div>
   );
@@ -458,38 +468,158 @@ function GoldMarket() {
   );
 }
 
+// ---- NEW AddAssetModal with searchable categorized asset picker ----
+
+const assetCategories: { type: PortfolioItem['type']; label: string; icon: string; color: string }[] = [
+  { type: 'crypto', label: 'Kripto Para', icon: '🪙', color: '#F59E0B' },
+  { type: 'stock', label: 'Hisse Senedi (BIST)', icon: '🏢', color: '#3B82F6' },
+  { type: 'fund', label: 'Yatırım Fonu', icon: '📊', color: '#10B981' },
+  { type: 'gold', label: 'Altın', icon: '🥇', color: '#FCD34D' },
+];
+
+function buildAssetList(cryptoPrices: CryptoPrice[]): SelectableAsset[] {
+  const assets: SelectableAsset[] = [];
+
+  // Crypto
+  for (const c of cryptoPrices) {
+    assets.push({
+      id: `crypto-${c.id}`,
+      symbol: c.symbol.toUpperCase(),
+      name: c.name,
+      type: 'crypto',
+      currentPrice: c.current_price,
+      category: 'Kripto Para',
+    });
+  }
+
+  // BIST Stocks
+  for (const s of mockBISTStocks) {
+    assets.push({
+      id: `stock-${s.symbol}`,
+      symbol: s.symbol,
+      name: s.name,
+      type: 'stock',
+      currentPrice: s.price,
+      category: 'Hisse Senedi',
+    });
+  }
+
+  // Funds
+  for (const f of mockFunds) {
+    assets.push({
+      id: `fund-${f.code}`,
+      symbol: f.code,
+      name: f.name,
+      type: 'fund',
+      currentPrice: f.price,
+      category: f.category,
+    });
+  }
+
+  // Gold
+  for (const g of mockGoldPrices) {
+    assets.push({
+      id: `gold-${g.type}`,
+      symbol: g.type === 'gram' ? 'GRAM' : g.type === 'ceyrek' ? 'ÇEYREK' : g.type === 'yarim' ? 'YARIM' : g.type === 'tam' ? 'TAM' : g.type === 'cumhuriyet' ? 'CUMHUR' : 'ATA',
+      name: g.name,
+      type: 'gold',
+      currentPrice: g.sell,
+      category: 'Altın',
+    });
+  }
+
+  return assets;
+}
+
 function AddAssetModal({ 
   isOpen, 
   onClose, 
   onSubmit,
+  cryptoPrices,
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  onSubmit: (data: Omit<PortfolioItem, 'id'>) => void;
+  onSubmit: (data: Omit<PortfolioItem, 'id'>, investedAmount: number) => void;
+  cryptoPrices: CryptoPrice[];
 }) {
   const [type, setType] = useState<PortfolioItem['type']>('crypto');
-  const [symbol, setSymbol] = useState('');
-  const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAsset, setSelectedAsset] = useState<SelectableAsset | null>(null);
   const [price, setPrice] = useState('');
+  const [investedAmount, setInvestedAmount] = useState('');
+  const [showAll, setShowAll] = useState(false);
+
+  const allAssets = useMemo(() => buildAssetList(cryptoPrices), [cryptoPrices]);
+
+  const filteredAssets = useMemo(() => {
+    let list = allAssets.filter(a => a.type === type);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(a => 
+        a.symbol.toLowerCase().includes(q) || 
+        a.name.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [allAssets, type, searchQuery]);
+
+  const displayAssets = showAll ? filteredAssets : filteredAssets.slice(0, 3);
+
+  // When an asset is selected, pre-fill the price field with the current price
+  useEffect(() => {
+    if (selectedAsset) {
+      setPrice(selectedAsset.currentPrice.toString());
+    }
+  }, [selectedAsset]);
+
+  // Parse the user-entered price
+  const priceValue = useMemo(() => {
+    const p = parseFloat(price);
+    return isNaN(p) || p <= 0 ? 0 : p;
+  }, [price]);
+
+  // Auto-calculate quantity based on user-entered price
+  const quantity = useMemo(() => {
+    if (!investedAmount || priceValue <= 0) return 0;
+    const amount = parseFloat(investedAmount);
+    if (isNaN(amount) || amount <= 0) return 0;
+    return amount / priceValue;
+  }, [priceValue, investedAmount]);
 
   const handleSubmit = () => {
-    if (!symbol || !quantity || !price) return;
+    if (!selectedAsset || !investedAmount || priceValue <= 0) return;
+    const amount = parseFloat(investedAmount);
+    if (isNaN(amount) || amount <= 0) return;
+    const qty = amount / priceValue;
 
     onSubmit({
-      type,
-      symbol: symbol.toUpperCase(),
-      name: name || symbol.toUpperCase(),
-      quantity: parseFloat(quantity),
-      averageCost: parseFloat(price),
-      currentPrice: parseFloat(price),
+      type: selectedAsset.type,
+      symbol: selectedAsset.symbol,
+      name: selectedAsset.name,
+      quantity: qty,
+      averageCost: priceValue,
+      currentPrice: priceValue,
       transactions: [],
-    });
+    }, amount);
 
-    setSymbol('');
-    setName('');
-    setQuantity('');
+    setSelectedAsset(null);
     setPrice('');
+    setInvestedAmount('');
+    setSearchQuery('');
+    setShowAll(false);
+  };
+
+  const handleSelectAsset = (asset: SelectableAsset) => {
+    setSelectedAsset(asset);
+    setSearchQuery(asset.symbol + ' - ' + asset.name);
+  };
+
+  const handleClose = () => {
+    setSelectedAsset(null);
+    setInvestedAmount('');
+    setSearchQuery('');
+    setShowAll(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -500,87 +630,157 @@ function AddAssetModal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <motion.div
         initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.96, opacity: 0 }}
-        className="w-full max-w-sm bg-slate-900 rounded-2xl border border-white/5 shadow-premium overflow-hidden"
+        className="w-full max-w-md bg-slate-900 rounded-2xl border border-white/5 shadow-premium overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-5 border-b border-white/5 flex items-center justify-between">
           <h3 className="text-sm font-bold text-white">Yeni Varlık Ekle</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/5 transition-colors">
+          <button onClick={handleClose} className="p-1 rounded-lg hover:bg-white/5 transition-colors">
             <X className="w-4 h-4 text-white/40" />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
-          <div>
-            <label className="block text-xs text-white/40 mb-1.5 font-medium">Varlık Tipi</label>
-            <GlassSelect
-              value={type}
-              onChange={(v) => setType(v as PortfolioItem['type'])}
-              options={[
-                { value: 'crypto', label: '🪙 Kripto Para' },
-                { value: 'stock', label: '🏢 Hisse Senedi' },
-                { value: 'fund', label: '📊 Yatırım Fonu' },
-                { value: 'gold', label: '🥇 Altın' },
-                { value: 'currency', label: '💵 Döviz' },
-              ]}
-            />
+        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Asset Type Tabs */}
+          <div className="flex gap-1.5 flex-wrap">
+            {assetCategories.map((cat) => (
+              <button
+                key={cat.type}
+                onClick={() => { setType(cat.type); setSelectedAsset(null); setSearchQuery(''); setShowAll(false); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  type === cat.type
+                    ? 'bg-white/10 text-white border border-white/10'
+                    : 'text-white/40 hover:text-white/70 bg-white/5 border border-transparent'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                {cat.label}
+              </button>
+            ))}
           </div>
 
-          <div>
-            <label className="block text-xs text-white/40 mb-1.5 font-medium">Sembol</label>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
             <GlassInput
-              value={symbol}
-              onChange={setSymbol}
-              placeholder="BTC, THYAO, AFT..."
+              value={searchQuery}
+              onChange={(v) => { setSearchQuery(v); setShowAll(true); }}
+              placeholder="Ara (sembol veya isim)..."
+              className="pl-9"
             />
           </div>
 
-          <div>
-            <label className="block text-xs text-white/40 mb-1.5 font-medium">İsim (Opsiyonel)</label>
-            <GlassInput
-              value={name}
-              onChange={setName}
-              placeholder="Bitcoin, Türk Hava Yolları..."
-            />
+          {/* Asset List */}
+          <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+            {displayAssets.map((asset) => (
+              <button
+                key={asset.id}
+                onClick={() => handleSelectAsset(asset)}
+                className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
+                  selectedAsset?.id === asset.id
+                    ? 'bg-[#00c2ff]/10 border border-[#00c2ff]/30'
+                    : 'bg-white/5 border border-transparent hover:bg-white/10'
+                }`}
+              >
+                <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-xs shrink-0">
+                  {assetCategories.find(c => c.type === asset.type)?.icon || '📌'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xs font-semibold text-white">{asset.symbol}</span>
+                    <span className="text-[10px] text-white/40 truncate">{asset.name}</span>
+                  </div>
+                  <div className="text-[10px] text-white/30">
+                    {asset.category}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-xs font-semibold text-white tabular-nums">{formatCurrency(asset.currentPrice)}</span>
+                </div>
+              </button>
+            ))}
+            {displayAssets.length === 0 && (
+              <div className="text-center py-4 text-xs text-white/40">
+                Sonuç bulunamadı
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-white/40 mb-1.5 font-medium">Miktar</label>
-              <GlassInput
-                type="number"
-                value={quantity}
-                onChange={setQuantity}
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-white/40 mb-1.5 font-medium">Alış Fiyatı (₺)</label>
-              <GlassInput
-                type="number"
-                value={price}
-                onChange={setPrice}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
+          {/* Show More / Less */}
+          {filteredAssets.length > 3 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="w-full flex items-center justify-center gap-1 py-2 text-xs text-white/40 hover:text-white/70 transition-colors"
+            >
+              {showAll ? (
+                <>Daha Az Göster <ChevronUp className="w-3 h-3" /></>
+              ) : (
+                <>Daha Fazla ({filteredAssets.length - 3} tane daha) <ChevronDown className="w-3 h-3" /></>
+              )}
+            </button>
+          )}
+
+          {/* Investment Amount Input */}
+          {selectedAsset && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="space-y-3 pt-2 border-t border-white/5"
+            >
+              <div>
+                <label className="block text-xs text-white/40 mb-1.5 font-medium">Alış Fiyatı (₺)</label>
+                <GlassInput
+                  type="number"
+                  value={price}
+                  onChange={setPrice}
+                  placeholder="0.00"
+                />
+                {selectedAsset && (
+                  <p className="text-[10px] text-white/30 mt-1">Anlık fiyat: {formatCurrency(selectedAsset.currentPrice)}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs text-white/40 mb-1.5 font-medium">Yatırılacak Tutar (₺)</label>
+                <GlassInput
+                  type="number"
+                  value={investedAmount}
+                  onChange={setInvestedAmount}
+                  placeholder="0.00"
+                />
+              </div>
+              {quantity > 0 && (
+                <div className="px-4 py-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/50">Alınacak Miktar</span>
+                    <span className="text-white font-bold tabular-nums">{formatNumber(quantity)} Adet</span>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
 
         <div className="p-5 border-t border-white/5 flex gap-2.5">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="flex-1 py-2 px-4 rounded-xl text-xs bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
           >
             İptal
           </button>
-          <NeonButton onClick={handleSubmit} className="flex-1 text-xs">
-            Ekle
+          <NeonButton 
+            onClick={handleSubmit} 
+            className="flex-1 text-xs"
+            disabled={!selectedAsset || !investedAmount || quantity <= 0}
+          >
+            {quantity > 0 
+              ? `${formatNumber(quantity)} Adet Ekle` 
+              : 'Ekle'}
           </NeonButton>
         </div>
       </motion.div>

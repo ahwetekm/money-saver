@@ -265,3 +265,80 @@ export function checkRebalanceNeeded(
 
   return null;
 }
+
+// ─── Debt Management Helpers ───
+
+export function calculateMinimumPayment(
+  remainingBalance: number,
+  type: 'percentage' | 'fixed',
+  value: number
+): number {
+  if (type === 'percentage') {
+    return Math.round((remainingBalance * value) / 100 * 100) / 100;
+  }
+  return Math.min(value, remainingBalance);
+}
+
+export function calculateLateFee(
+  remainingBalance: number,
+  annualRate: number,
+  daysOverdue: number
+): number {
+  const dailyRate = annualRate / 365 / 100;
+  return Math.round(remainingBalance * dailyRate * daysOverdue * 100) / 100;
+}
+
+export function calculateMonthlyLoanPayment(
+  principal: number,
+  annualRate: number,
+  totalMonths: number
+): number {
+  if (annualRate === 0) {
+    return Math.round((principal / totalMonths) * 100) / 100;
+  }
+  const monthlyRate = annualRate / 100 / 12;
+  const payment =
+    (principal * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) /
+    (Math.pow(1 + monthlyRate, totalMonths) - 1);
+  return Math.round(payment * 100) / 100;
+}
+
+export function generateAmortizationTable(
+  principal: number,
+  annualRate: number,
+  totalMonths: number,
+  monthlyPayment: number
+): { installment: number; principalPaid: number; interestPaid: number; remainingBalance: number; totalPayment: number }[] {
+  const table: { installment: number; principalPaid: number; interestPaid: number; remainingBalance: number; totalPayment: number }[] = [];
+  let balance = principal;
+  const monthlyRate = annualRate > 0 ? annualRate / 100 / 12 : 0;
+
+  for (let i = 1; i <= totalMonths && balance > 0; i++) {
+    const interestPaid = Math.round(balance * monthlyRate * 100) / 100;
+    let principalPaid = Math.round((monthlyPayment - interestPaid) * 100) / 100;
+    if (principalPaid > balance) {
+      principalPaid = Math.round(balance * 100) / 100;
+    }
+    balance = Math.round((balance - principalPaid) * 100) / 100;
+    const totalPayment = Math.round((principalPaid + interestPaid) * 100) / 100;
+
+    table.push({
+      installment: i,
+      principalPaid,
+      interestPaid,
+      remainingBalance: Math.max(0, balance),
+      totalPayment,
+    });
+  }
+
+  return table;
+}
+
+export function applyPaymentToDebt(
+  debt: { remainingBalance: number; status: string },
+  paymentAmount: number
+): { remainingBalance: number; status: string } {
+  const newBalance = Math.max(0, Math.round((debt.remainingBalance - paymentAmount) * 100) / 100);
+  const newStatus = newBalance <= 0 ? 'paid' : debt.status;
+  return { remainingBalance: newBalance, status: newStatus };
+}

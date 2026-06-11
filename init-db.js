@@ -123,8 +123,51 @@ async function init() {
         currency TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id)
       );
+
+      -- Debt Management Tables
+      CREATE TABLE IF NOT EXISTS debts (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        principal REAL NOT NULL,
+        remainingBalance REAL NOT NULL,
+        annualInterestRate REAL NOT NULL DEFAULT 0,
+        monthlyPayment REAL,
+        dueDate TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        creditCardInfo TEXT, -- JSON object for credit card details
+        loanInfo TEXT, -- JSON object for loan details
+        notes TEXT,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS debt_payments (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        debt_id TEXT NOT NULL,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        note TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (debt_id) REFERENCES debts(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS payment_schedules (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        debt_id TEXT NOT NULL,
+        dueDate TEXT NOT NULL,
+        amount REAL NOT NULL,
+        isPaid BOOLEAN NOT NULL DEFAULT 0,
+        paidDate TEXT,
+        note TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (debt_id) REFERENCES debts(id) ON DELETE CASCADE
+      );
     `);
-    console.log("Database initialized successfully.");
+    console.log("Database initialized successfully with debt tables.");
   } catch (error) {
     console.error("Database initialization failed:", error);
   }

@@ -7,6 +7,9 @@ import type {
   Subscription,
   DelayedGratification,
   AppSettings,
+  Debt,
+  PaymentSchedule,
+  DebtPayment,
 } from '../types';
 
 // ─── Sync Queue Types ───
@@ -37,6 +40,9 @@ export type LocalGoal = Goal & LocalRecord;
 export type LocalSubscription = Subscription & LocalRecord;
 export type LocalDelayedGratification = DelayedGratification & LocalRecord;
 export type LocalSettings = AppSettings & { userId: string } & LocalRecord;
+export type LocalDebt = Debt & LocalRecord;
+export type LocalPaymentSchedule = PaymentSchedule & LocalRecord;
+export type LocalDebtPayment = DebtPayment & LocalRecord;
 
 // ─── Dexie Database ───
 class MoneySaverDB extends Dexie {
@@ -48,6 +54,9 @@ class MoneySaverDB extends Dexie {
   delayedGratifications!: Table<LocalDelayedGratification, string>;
   settings!: Table<LocalSettings, string>;
   syncQueue!: Table<SyncQueueItem, number>;
+  debts!: Table<LocalDebt, string>;
+  paymentSchedules!: Table<LocalPaymentSchedule, string>;
+  debtPayments!: Table<LocalDebtPayment, string>;
 
   constructor() {
     super('MoneySaverDB');
@@ -60,6 +69,20 @@ class MoneySaverDB extends Dexie {
       delayedGratifications: 'id, updatedAt, syncedAt',
       settings: 'id, updatedAt, syncedAt',
       syncQueue: '++id, entity, operation, createdAt',
+    });
+
+    this.version(2).stores({
+      transactions: 'id, updatedAt, syncedAt',
+      budgets: 'id, updatedAt, syncedAt',
+      portfolio: 'id, updatedAt, syncedAt',
+      goals: 'id, updatedAt, syncedAt',
+      subscriptions: 'id, updatedAt, syncedAt',
+      delayedGratifications: 'id, updatedAt, syncedAt',
+      settings: 'id, updatedAt, syncedAt',
+      syncQueue: '++id, entity, operation, createdAt',
+      debts: 'id, updatedAt, syncedAt, status',
+      paymentSchedules: 'id, debtId, updatedAt, syncedAt',
+      debtPayments: 'id, debtId, updatedAt, syncedAt',
     });
   }
 }
@@ -75,6 +98,9 @@ export const entityTables: Record<string, Table<LocalRecord, string>> = {
   subscriptions: db.subscriptions,
   delayedGratifications: db.delayedGratifications,
   settings: db.settings,
+  debts: db.debts,
+  paymentSchedules: db.paymentSchedules,
+  debtPayments: db.debtPayments,
 };
 
 // ─── Helpers ───
@@ -180,5 +206,8 @@ export async function clearAllLocalData() {
     db.delayedGratifications.clear(),
     db.settings.clear(),
     db.syncQueue.clear(),
+    db.debts.clear(),
+    db.paymentSchedules.clear(),
+    db.debtPayments.clear(),
   ]);
 }

@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Transaction, Budget, PortfolioItem, Goal, Subscription,
-  DelayedGratification, AppSettings, CryptoPrice
+  DelayedGratification, AppSettings, CryptoPrice,
+  Debt, DebtPayment, PaymentSchedule,
 } from '../types';
 import * as offlineApi from '../lib/offlineApi';
 import { listenNetworkChanges, isSyncing, startPeriodicSync } from '../lib/sync';
@@ -28,6 +29,12 @@ interface FinansState {
   isSyncing: boolean;
   pendingSyncCount: number;
 
+  // Debt state
+  debts: Debt[];
+  debtPayments: DebtPayment[];
+  paymentSchedules: PaymentSchedule[];
+  isLoadingDebts: boolean;
+
   // Actions
   initialize: () => Promise<void>;
 
@@ -41,7 +48,7 @@ interface FinansState {
   deleteBudget: (id: string) => Promise<void>;
 
   // Portfolio actions
-  addPortfolioItem: (item: Omit<PortfolioItem, 'id'>) => Promise<void>;
+  addPortfolioItem: (item: Omit<PortfolioItem, 'id'>, investedAmount?: number) => Promise<void>;
   updatePortfolioItem: (id: string, updates: Partial<PortfolioItem>) => Promise<void>;
   deletePortfolioItem: (id: string) => Promise<void>;
   addPortfolioTransaction: (itemId: string, transaction: Omit<PortfolioItem['transactions'][0], 'id'>) => Promise<void>;
@@ -76,6 +83,14 @@ interface FinansState {
 
   // Internal
   _refreshSyncStatus: () => Promise<void>;
+
+  // Debt actions
+  fetchAllDebts: () => Promise<void>;
+  addNewDebt: (debt: Omit<Debt, 'id' | 'createdAt'>) => Promise<void>;
+  updateExistingDebt: (id: string, updates: Partial<Debt>) => Promise<void>;
+  deleteExistingDebt: (id: string) => Promise<void>;
+  makeDebtPayment: (debtId: string, amount: number, note?: string) => Promise<void>;
+  closeDebt: (id: string) => Promise<void>;
 }
 
 const defaultSettings: AppSettings = {
@@ -101,6 +116,10 @@ export const useFinansStore = create<FinansState>((set, get) => ({
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   isSyncing: false,
   pendingSyncCount: 0,
+  debts: [],
+  debtPayments: [],
+  paymentSchedules: [],
+  isLoadingDebts: false,
 
   initialize: async () => {
     try {
@@ -123,6 +142,9 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         delayedGratifications,
         settings,
         userProfile,
+        debts,
+        debtPayments,
+        paymentSchedules,
       ] = await Promise.all([
         offlineApi.fetchTransactions(),
         offlineApi.fetchBudgets(),
@@ -132,6 +154,9 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         offlineApi.fetchDelayedGratifications(),
         offlineApi.fetchSettings(),
         offlineApi.fetchUserProfile(),
+        offlineApi.fetchDebts(),
+        offlineApi.fetchDebtPayments(),
+        offlineApi.fetchPaymentSchedules(),
       ]);
 
       set({
@@ -143,6 +168,9 @@ export const useFinansStore = create<FinansState>((set, get) => ({
         delayedGratifications: delayedGratifications || [],
         settings: settings || defaultSettings,
         userName: userProfile?.name || '',
+        debts: debts || [],
+        debtPayments: debtPayments || [],
+        paymentSchedules: paymentSchedules || [],
         isLoading: false,
         initialized: true,
       });
@@ -229,10 +257,25 @@ export const useFinansStore = create<FinansState>((set, get) => ({
     await get()._refreshSyncStatus();
   },
 
-  addPortfolioItem: async (item) => {
+  addPortfolioItem: async (item, investedAmount?: number) => {
     const newItem = { ...item, id: uuidv4() } as PortfolioItem;
     await offlineApi.createPortfolioItem(newItem);
     set((state) => ({ portfolio: [...state.portfolio, newItem] }));
+
+    // Deduct the invested amount from cash by creating an expense transaction
+    if (investedAmount && investedAmount > 0) {
+      const newTransaction = {
+        id: uuidv4(),
+        type: 'expense' as const,
+        category: 'Yatırım',
+        amount: investedAmount,
+        description: `${item.symbol} alımı`,
+        date: new Date().toISOString().split('T')[0],
+      } as Transaction;
+      await offlineApi.createTransaction(newTransaction);
+      set((state) => ({ transactions: [...state.transactions, newTransaction] }));
+    }
+
     await get()._refreshSyncStatus();
   },
 
@@ -373,10 +416,110 @@ export const useFinansStore = create<FinansState>((set, get) => ({
       portfolio: [],
       goals: [],
       subscriptions: [],
-      delayedGratifications: []
+      delayedGratifications: [],
+      debts: [],
+      debtPayments: [],
+      paymentSchedules: [],
     });
     await get()._refreshSyncStatus();
   },
 
   setCryptoPrices: (prices) => set({ cryptoPrices: prices }),
+
+  // ─── Debt Actions ───
+
+  fetchAllDebts: async () => {
+    set({ isLoadingDebts: true });
+    try {
+      const [debts, debtPayments, paymentSchedules] = await Promise.all([
+        offlineApi.fetchDebts(),
+        offlineApi.fetchDebtPayments(),
+        offlineApi.fetchPaymentSchedules(),
+      ]);
+      set({
+        debts: debts || [],
+        debtPayments: debtPayments || [],
+        paymentSchedules: paymentSchedules || [],
+      });
+    } catch (error) {
+      console.error('Failed to fetch debts:', error);
+    } finally {
+      set({ isLoadingDebts: false });
+    }
+  },
+
+  addNewDebt: async (debt) => {
+    const newDebt: Debt = {
+      ...debt,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+    };
+    await offlineApi.createDebt(newDebt);
+    set((state) => ({ debts: [...state.debts, newDebt] }));
+    await get()._refreshSyncStatus();
+  },
+
+  updateExistingDebt: async (id, updates) => {
+    const debt = get().debts.find((d) => d.id === id);
+    if (debt) {
+      const updated = { ...debt, ...updates };
+      await offlineApi.updateDebt(updated);
+      set((state) => ({
+        debts: state.debts.map((d) => (d.id === id ? updated : d)),
+      }));
+      await get()._refreshSyncStatus();
+    }
+  },
+
+  deleteExistingDebt: async (id) => {
+    await offlineApi.deleteDebt(id);
+    set((state) => ({
+      debts: state.debts.filter((d) => d.id !== id),
+      debtPayments: state.debtPayments.filter((p) => p.debtId !== id),
+      paymentSchedules: state.paymentSchedules.filter((s) => s.debtId !== id),
+    }));
+    await get()._refreshSyncStatus();
+  },
+
+  makeDebtPayment: async (debtId, amount, note) => {
+    const debt = get().debts.find((d) => d.id === debtId);
+    if (!debt) return;
+
+    const newBalance = Math.max(0, debt.remainingBalance - amount);
+    const newStatus = newBalance <= 0 ? 'paid' : debt.status;
+
+    const payment: DebtPayment = {
+      id: uuidv4(),
+      debtId,
+      amount,
+      date: new Date().toISOString().split('T')[0],
+      note,
+    };
+
+    const updatedDebt = { ...debt, remainingBalance: newBalance, status: newStatus as Debt['status'] };
+
+    await Promise.all([
+      offlineApi.addDebtPayment(payment),
+      offlineApi.updateDebt(updatedDebt),
+    ]);
+
+    set((state) => ({
+      debtPayments: [...state.debtPayments, payment],
+      debts: state.debts.map((d) => (d.id === debtId ? updatedDebt : d)),
+    }));
+
+    await get()._refreshSyncStatus();
+  },
+
+  closeDebt: async (id) => {
+    const debt = get().debts.find((d) => d.id === id);
+    if (debt) {
+      const updated = { ...debt, remainingBalance: 0, status: 'paid' as Debt['status'] };
+      await offlineApi.updateDebt(updated);
+      set((state) => ({
+        debts: state.debts.map((d) => (d.id === id ? updated : d)),
+      }));
+      await get()._refreshSyncStatus();
+    }
+  },
 }));

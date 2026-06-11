@@ -1,9 +1,10 @@
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import { ReactNode, useState } from 'react';
 import { 
   LayoutDashboard, Wallet, TrendingUp, Target, 
-  Settings, Plus, TrendingDown, Bitcoin
+  Settings, Plus, TrendingDown, Bitcoin, CreditCard
 } from 'lucide-react';
 import { NeonButton, GlassInput } from '../ui/GlassCard';
 import { useFinansStore } from '../../store/useFinansStore';
@@ -19,6 +20,7 @@ interface LayoutProps {
 
 const mobileNavItems = [
   { id: 'dashboard', label: 'Panel', icon: LayoutDashboard },
+  { id: 'debts', label: 'Borçlar', icon: CreditCard },
   { id: 'portfolio', label: 'Portföy', icon: TrendingUp },
   { id: 'transactions', label: 'İşlemler', icon: Wallet },
   { id: 'analytics', label: 'Analiz', icon: Target },
@@ -47,8 +49,8 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         <main className="relative z-10 p-4">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, paddingTop: 4 }}
+            animate={{ opacity: 1, paddingTop: 0 }}
             transition={spring120}
           >
             {children}
@@ -211,8 +213,8 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
         <div className="p-6 lg:p-8 max-w-6xl mx-auto">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, paddingTop: 6 }}
+            animate={{ opacity: 1, paddingTop: 0 }}
             transition={spring120}
           >
             {children}
@@ -288,29 +290,23 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
     onClose();
   };
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={tween120}
-      className="fixed inset-0 z-50 bg-black/50"
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
         transition={spring120Sheet}
-        className="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-3xl border-t border-white/5"
+        className="w-full max-w-lg max-h-[85vh] overflow-y-auto bg-slate-900 rounded-2xl"
         onClick={(e) => e.stopPropagation()}
-        style={{ willChange: 'transform' }}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-9 h-1 rounded-full bg-white/10" />
-        </div>
-
         {/* Header */}
         <div className="px-5 pb-3.5 border-b border-white/5">
           <h3 className="text-base font-semibold text-white">
@@ -395,7 +391,8 @@ function QuickAddBottomSheet({ type, onClose }: { type: 'income' | 'expense' | '
           </NeonButton>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 

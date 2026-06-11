@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Target, AlertTriangle, Zap, ArrowUpRight, ArrowDownRight, Activity
+  Target, AlertTriangle, Zap, ArrowUpRight, ArrowDownRight, Activity,
+  CreditCard, Calendar, AlertCircle
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { GlassCard, ProgressBar } from '../ui/GlassCard';
 import { PageHeader } from '../layout/MobileLayout';
 import { useFinansStore } from '../../store/useFinansStore';
-import { formatCompactCurrency, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
+import { formatCompactCurrency, formatShortDate, getCurrentMonth, calculateFinancialIQ, checkRebalanceNeeded } from '../../lib/utils';
 import { categoryColors, categoryIcons } from '../../data/mockData';
 import { SafeChart } from '../ui/SafeChart';
 
@@ -24,6 +25,10 @@ export function Dashboard() {
   const portfolio = useFinansStore((s) => s.portfolio);
   const goals = useFinansStore((s) => s.goals);
   const userName = useFinansStore((s) => s.userName);
+
+  // Debt data
+  const debts = useFinansStore((s) => s.debts);
+  const paymentSchedules = useFinansStore((s) => s.paymentSchedules);
 
   const computed = useMemo(() => {
     const currentMonth = getCurrentMonth();
@@ -134,6 +139,17 @@ export function Dashboard() {
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight tabular-nums">
                 {formatCompactCurrency(totalAssets)}
               </h2>
+              <div className="flex items-center gap-4 mt-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-white/40 text-[10px] font-medium uppercase tracking-wider">Nakit</span>
+                  <span className="text-sm font-semibold text-white tabular-nums">{formatCompactCurrency(balance)}</span>
+                </div>
+                <div className="w-px h-4 bg-white/10" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-white/40 text-[10px] font-medium uppercase tracking-wider">Yatırım</span>
+                  <span className="text-sm font-semibold text-white tabular-nums">{formatCompactCurrency(portfolioValue)}</span>
+                </div>
+              </div>
               <div className="flex items-center gap-1.5 mt-2">
                 <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
                   isProfitPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
@@ -414,6 +430,100 @@ export function Dashboard() {
           </GlassCard>
         </motion.div>
       </div>
+
+      {/* Debt Summary Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+      >
+        <GlassCard className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-rose-400" />
+              <h3 className="text-sm font-semibold text-white/80 tracking-tight">Borç Durumu</h3>
+            </div>
+          </div>
+
+          {(() => {
+            const activeDebts = debts.filter((d) => d.status !== 'paid');
+            const totalDebtBalance = activeDebts.reduce((sum, d) => sum + d.remainingBalance, 0);
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            const monthlyDue = paymentSchedules
+              .filter((s) => s.dueDate.startsWith(currentMonth) && !s.isPaid)
+              .reduce((sum, s) => sum + s.amount, 0);
+            const overdueDebts = debts.filter((d) => d.status === 'overdue' || (d.status === 'active' && new Date(d.dueDate) < new Date()));
+            const overdueCount = overdueDebts.length;
+            const overdueTotal = overdueDebts.reduce((sum, d) => sum + d.remainingBalance, 0);
+
+            const upcomingPayments = paymentSchedules
+              .filter((s) => !s.isPaid && new Date(s.dueDate) >= new Date())
+              .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+              .slice(0, 3);
+
+            if (totalDebtBalance === 0 && monthlyDue === 0 && overdueCount === 0) {
+              return (
+                <div className="text-center py-6 text-xs text-white/40">
+                  Henüz borç bulunmuyor
+                </div>
+              );
+            }
+
+            return (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                  <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                    <p className="text-[10px] text-rose-400/60 font-medium uppercase tracking-wider">Toplam Borç</p>
+                    <p className="text-lg font-bold text-rose-400 tabular-nums mt-0.5">
+                      {formatCompactCurrency(totalDebtBalance)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                    <p className="text-[10px] text-amber-400/60 font-medium uppercase tracking-wider">Bu Ay Ödenecek</p>
+                    <p className="text-lg font-bold text-amber-400 tabular-nums mt-0.5">
+                      {formatCompactCurrency(monthlyDue)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                    <p className={`text-[10px] font-medium uppercase tracking-wider ${overdueCount > 0 ? 'text-rose-400/60' : 'text-emerald-400/60'}`}>
+                      Vadesi Geçmiş
+                    </p>
+                    <p className={`text-lg font-bold tabular-nums mt-0.5 ${overdueCount > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      {overdueCount > 0 ? `${formatCompactCurrency(overdueTotal)} (${overdueCount} adet)` : 'Yok'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Upcoming Payments */}
+                {upcomingPayments.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-white/60 mb-2">Yaklaşan Ödemeler</p>
+                    <div className="space-y-2">
+                      {upcomingPayments.map((schedule) => {
+                        const debt = debts.find((d) => d.id === schedule.debtId);
+                        return (
+                          <div key={schedule.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-white/[0.02]">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Calendar className="w-3.5 h-3.5 text-white/30 shrink-0" />
+                              <span className="text-xs text-white/70 truncate">{debt?.name || 'Borç'}</span>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="text-[10px] text-white/40">{formatShortDate(schedule.dueDate)}</span>
+                              <span className="text-xs font-semibold text-amber-400 tabular-nums">
+                                {formatCompactCurrency(schedule.amount)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </GlassCard>
+      </motion.div>
 
       {/* Rebalance Alert */}
       {rebalanceAlert && (

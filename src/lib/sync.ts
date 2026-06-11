@@ -165,6 +165,17 @@ async function executeRemoteOperation(entity: string, operation: SyncOperation, 
         await api.updateSettings(payload);
       }
       break;
+    case 'debts':
+      if (operation === 'create') await api.createDebt(payload);
+      else if (operation === 'update') await api.updateDebt(payload);
+      else if (operation === 'delete') await api.deleteDebt(getPayloadId(payload));
+      break;
+    case 'debtPayments':
+      if (operation === 'create') await api.createDebtPayment(payload);
+      break;
+    case 'paymentSchedules':
+      if (operation === 'update') await api.updatePaymentSchedule(payload);
+      break;
     default:
       throw new Error(`Unknown entity: ${entity}`);
   }
@@ -183,6 +194,9 @@ export async function pullAllFromRemote() {
     subscriptions,
     delayedGratifications,
     settings,
+    debts,
+    debtPayments,
+    paymentSchedules,
   ] = await Promise.all([
     api.fetchTransactions().catch((e) => { console.warn('[Sync] fetchTransactions failed:', e); return []; }),
     api.fetchBudgets().catch((e) => { console.warn('[Sync] fetchBudgets failed:', e); return []; }),
@@ -191,6 +205,9 @@ export async function pullAllFromRemote() {
     api.fetchSubscriptions().catch((e) => { console.warn('[Sync] fetchSubscriptions failed:', e); return []; }),
     api.fetchDelayedGratifications().catch((e) => { console.warn('[Sync] fetchDelayedGratifications failed:', e); return []; }),
     api.fetchSettings().catch((e) => { console.warn('[Sync] fetchSettings failed:', e); return null; }),
+    api.fetchDebts().catch((e) => { console.warn('[Sync] fetchDebts failed:', e); return []; }),
+    api.fetchDebtPayments().catch((e) => { console.warn('[Sync] fetchDebtPayments failed:', e); return []; }),
+    api.fetchPaymentSchedules().catch((e) => { console.warn('[Sync] fetchPaymentSchedules failed:', e); return []; }),
   ]);
 
   const now = Date.now();
@@ -218,6 +235,11 @@ export async function pullAllFromRemote() {
       });
     }
   }
+
+  // Merge debt data
+  await mergeRemoteRecords('debts', debts, now);
+  await mergeRemoteRecords('debtPayments', debtPayments, now);
+  await mergeRemoteRecords('paymentSchedules', paymentSchedules, now);
 }
 
 async function mergeRemoteRecords(entity: string, remoteRecords: LocalRecord[], now: number) {
@@ -262,4 +284,7 @@ export async function resetLocalData() {
   await db.subscriptions.clear();
   await db.delayedGratifications.clear();
   await db.settings.clear();
+  await db.debts.clear();
+  await db.debtPayments.clear();
+  await db.paymentSchedules.clear();
 }

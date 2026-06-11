@@ -67,3 +67,17 @@ export const updateSettings = (data: unknown) => request('/settings', { method: 
 export const fetchUser = () => request('/user');
 export const updateUser = (data: unknown) => request('/user', { method: 'PUT', body: JSON.stringify(data) });
 export const resetUserData = () => request('/user', { method: 'DELETE' });
+
+// ─── Debts ───
+export const fetchDebts = () => request('/debts');
+export const createDebt = (data: unknown) => request('/debts', { method: 'POST', body: JSON.stringify(data) });
+export const updateDebt = (data: unknown) => request('/debts', { method: 'PUT', body: JSON.stringify(data) });
+export const deleteDebt = (id: string) => request(`/debts?id=${id}`, { method: 'DELETE' });
+
+// ─── Debt Payments ───
+export const fetchDebtPayments = () => request('/debt-payments');
+export const createDebtPayment = (data: unknown) => request('/debt-payments', { method: 'POST', body: JSON.stringify(data) });
+
+// ─── Payment Schedules ───
+export const fetchPaymentSchedules = () => request('/payment-schedules');
+export const updatePaymentSchedule = (data: unknown) => request('/payment-schedules', { method: 'PUT', body: JSON.stringify(data) });

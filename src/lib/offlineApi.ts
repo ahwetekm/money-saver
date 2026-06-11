@@ -30,6 +30,9 @@ import type {
   Subscription,
   DelayedGratification,
   AppSettings,
+  Debt,
+  DebtPayment,
+  PaymentSchedule,
 } from '../types';
 
 // ─── Helpers ───
@@ -354,6 +357,89 @@ export async function resetUserData() {
 }
 
 // ─── Initialization ───
+
+// ─── Debts ───
+
+export async function fetchDebts(): Promise<Debt[]> {
+  const local = await getAllLocal<Debt>('debts');
+  if (isOnline() && local.length === 0) {
+    try {
+      const remote = await api.fetchDebts();
+      for (const r of remote) {
+        await putLocal('debts', withMeta(r));
+      }
+      return remote;
+    } catch {
+      return local;
+    }
+  }
+  if (isOnline()) {
+    pullAllFromRemote().catch(() => {});
+  }
+  return local;
+}
+
+export async function createDebt(data: Debt) {
+  await writeLocalAndQueue('debts', 'create', data);
+}
+
+export async function updateDebt(data: Debt) {
+  await writeLocalAndQueue('debts', 'update', data);
+}
+
+export async function deleteDebt(id: string) {
+  await writeLocalAndQueue('debts', 'delete', { id } as Debt);
+}
+
+// ─── Debt Payments ───
+
+export async function fetchDebtPayments(): Promise<DebtPayment[]> {
+  const local = await getAllLocal<DebtPayment>('debtPayments');
+  if (isOnline() && local.length === 0) {
+    try {
+      const remote = await api.fetchDebtPayments();
+      for (const r of remote) {
+        await putLocal('debtPayments', withMeta(r));
+      }
+      return remote;
+    } catch {
+      return local;
+    }
+  }
+  if (isOnline()) {
+    pullAllFromRemote().catch(() => {});
+  }
+  return local;
+}
+
+export async function addDebtPayment(data: DebtPayment) {
+  await writeLocalAndQueue('debtPayments', 'create', data);
+}
+
+// ─── Payment Schedules ───
+
+export async function fetchPaymentSchedules(): Promise<PaymentSchedule[]> {
+  const local = await getAllLocal<PaymentSchedule>('paymentSchedules');
+  if (isOnline() && local.length === 0) {
+    try {
+      const remote = await api.fetchPaymentSchedules();
+      for (const r of remote) {
+        await putLocal('paymentSchedules', withMeta(r));
+      }
+      return remote;
+    } catch {
+      return local;
+    }
+  }
+  if (isOnline()) {
+    pullAllFromRemote().catch(() => {});
+  }
+  return local;
+}
+
+export async function updatePaymentSchedule(data: PaymentSchedule) {
+  await writeLocalAndQueue('paymentSchedules', 'update', data);
+}
 
 export async function initializeOfflineData() {
   if (isOnline()) {

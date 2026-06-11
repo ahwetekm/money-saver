@@ -172,3 +172,66 @@ export interface AppState {
   delayedGratifications: DelayedGratification[];
   settings: AppSettings;
 }
+
+// ─── Debt Management Types ───
+
+export type DebtType = 'credit_card' | 'loan' | 'other';
+
+export type DebtStatus = 'active' | 'paid' | 'overdue';
+
+export type MinimumPaymentType = 'percentage' | 'fixed';
+
+export interface CreditCardInfo {
+  minimumPaymentType: MinimumPaymentType;
+  minimumPaymentValue: number;
+  statementDay: number;
+  cardHolderName?: string;
+  cardLastDigits?: string;
+}
+
+export interface LoanInfo {
+  totalMonths: number;
+  remainingMonths: number;
+}
+
+export interface Debt {
+  id: string;
+  type: DebtType;
+  name: string;
+  principal: number;
+  remainingBalance: number;
+  annualInterestRate: number;
+  monthlyPayment?: number;
+  dueDate: string;
+  status: DebtStatus;
+  creditCard?: CreditCardInfo;
+  loan?: LoanInfo;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface AmortizationRow {
+  installment: number;
+  principalPaid: number;
+  interestPaid: number;
+  remainingBalance: number;
+  totalPayment: number;
+}
+
+export interface PaymentSchedule {
+  id: string;
+  debtId: string;
+  dueDate: string;
+  amount: number;
+  isPaid: boolean;
+  paidDate?: string;
+  note?: string;
+}
+
+export interface DebtPayment {
+  id: string;
+  debtId: string;
+  amount: number;
+  date: string;
+  note?: string;
+}

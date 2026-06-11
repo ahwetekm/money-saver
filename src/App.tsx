@@ -12,6 +12,7 @@ const Analytics = lazy(() => import('./components/pages/Analytics').then(m => ({
 const Goals = lazy(() => import('./components/pages/Goals').then(m => ({ default: m.Goals })));
 const Subscriptions = lazy(() => import('./components/pages/Subscriptions').then(m => ({ default: m.Subscriptions })));
 const Settings = lazy(() => import('./components/pages/Settings').then(m => ({ default: m.Settings })));
+const DebtsPage = lazy(() => import('./components/pages/DebtsPage').then(m => ({ default: m.DebtsPage })));
 
 // Loading screen component
 function LoadingScreen() {
@@ -162,6 +163,8 @@ function App() {
         return <Goals />;
       case 'subscriptions':
         return <Subscriptions />;
+      case 'debts':
+        return <DebtsPage />;
       case 'settings':
         return <Settings />;
       default:
